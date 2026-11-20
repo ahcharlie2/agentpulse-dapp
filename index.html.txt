@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgentPulse — Sybil-Proof On-Chain Sentiment Board</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #0b0e11; color: #eaecef; display: flex; justify-content: center; padding: 24px 16px; min-height: 100vh; }
+    .container { max-width: 520px; width: 100%; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .logo { font-size: 20px; font-weight: 700; color: #f0b90b; }
+    .badge { font-size: 12px; background: #1e2329; padding: 4px 10px; border-radius: 6px; color: #848e9c; }
+    .card { background: #181a20; border: 1px solid #2b3139; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+    .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer; transition: 0.2s; }
+    .btn-primary { background: #f0b90b; color: #0b0e11; }
+    .btn-primary:hover { background: #d9a507; }
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+    .btn-bull { background: #0ecb81; color: #0b0e11; }
+    .btn-bear { background: #f6465d; color: #ffffff; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .status-box { margin-top: 12px; font-size: 13px; padding: 10px; border-radius: 8px; background: #1e2329; }
+    .ok { color: #0ecb81; }
+    .warn { color: #f6465d; }
+    .question { font-size: 18px; font-weight: 600; line-height: 1.4; margin-bottom: 16px; }
+    .stats { display: flex; justify-content: space-between; font-size: 14px; color: #b7bdc6; margin-bottom: 8px; }
+    .bar-bg { width: 100%; height: 10px; background: #f6465d; border-radius: 6px; overflow: hidden; }
+    .bar-fill { height: 100%; background: #0ecb81; width: 50%; transition: width 0.3s; }
+    .footer { font-size: 12px; color: #848e9c; text-align: center; line-height: 1.5; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">AgentPulse</div>
+      <div class="badge">BNB Smart Chain</div>
+    </div>
+
+    <div class="card">
+      <button id="connectBtn" class="btn btn-primary" onclick="connectWallet()">Connect Wallet</button>
+      <div id="walletStatus" class="status-box" style="display:none;"></div>
+    </div>
+
+    <div class="card">
+      <div class="badge" style="display:inline-block; margin-bottom:10px;">Active On-Chain Poll #1</div>
+      <div id="topicQuestion" class="question">Loading on-chain topic...</div>
+
+      <div class="stats">
+        <span id="bullText" class="ok">Bullish: 0 (0%)</span>
+        <span id="bearText" class="warn">Bearish: 0 (0%)</span>
+      </div>
+      <div class="bar-bg"><div id="bullBar" class="bar-fill"></div></div>
+
+      <div class="btn-row">
+        <button id="bullBtn" class="btn btn-bull" onclick="vote(true)" disabled>Vote Bullish</button>
+        <button id="bearBtn" class="btn btn-bear" onclick="vote(false)" disabled>Vote Bearish</button>
+      </div>
+
+      <div id="txMsg" class="status-box" style="display:none;"></div>
+    </div>
+
+    <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-size:13px; color:#848e9c;">Verified Unique Agent ID Voters</span>
+      <strong id="uniqueCount" style="color:#f0b90b; font-size:16px;">0</strong>
+    </div>
+
+    <div class="footer">
+      Built by ahcharlie.ai • Non-custodial & Open-Source.<br/>
+      Zero user funds held. Only wallets holding an active .ai Agent ID can vote. Informational market sentiment only—not financial advice.
+    </div>
+  </div>
+
+  <script>
+    const CONTRACT_ADDRESS = "0x0eB425B03D848BdC7Dc5029099a2d187678cdF94";
+    const BSC_RPC = "https://bsc-dataseed.binance.org/";
+
+    const ABI = [
+      "function checkAgentID(address _user) view returns (bool)",
+      "function hasVoted(uint256, address) view returns (bool)",
+      "function uniqueAgentVoters() view returns (uint256)",
+      "function getTopic(uint256 _topicId) view returns (string question, uint256 bullishVotes, uint256 bearishVotes, uint256 createdAt, bool active)",
+      "function castSignal(uint256 _topicId, bool _isBullish)"
+    ];
+
+    let signer = null;
+    let userAddress = null;
+
+    async function loadPublicData() {
+      if (!CONTRACT_ADDRESS.startsWith("0x")) return;
+      try {
+        const provider = new ethers.JsonRpcProvider(BSC_RPC);
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
+        const topic = await contract.getTopic(1);
+        const unique = await contract.uniqueAgentVoters();
+
+        const bull = Number(topic[1]);
+        const bear = Number(topic[2]);
+        const total = bull + bear;
+        const bullPct = total > 0 ? Math.round((bull / total) * 100) : 50;
+
+        document.getElementById("topicQuestion").innerText = topic[0];
+        document.getElementById("bullText").innerText = `Bullish: ${bull} (${total > 0 ? bullPct : 0}%)`;
+        document.getElementById("bearText").innerText = `Bearish: ${bear} (${total > 0 ? 100 - bullPct : 0}%)`;
+        document.getElementById("bullBar").style.width = `${bullPct}%`;
+        document.getElementById("uniqueCount").innerText = unique.toString();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function connectWallet() {
+      if (!window.ethereum) {
+        alert("Please open this page inside Binance Wallet dApp Browser or install a Web3 wallet.");
+        return;
+      }
+      try {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        const network = await provider.getNetwork();
+
+        if (network.chainId !== 56n) {
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x38" }]
+          });
+        }
+
+        signer = await provider.getSigner();
+        userAddress = await signer.getAddress();
+        document.getElementById("connectBtn").innerText = userAddress.slice(0, 6) + "..." + userAddress.slice(-4);
+
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+        const hasID = await contract.checkAgentID(userAddress);
+        const voted = await contract.hasVoted(1, userAddress);
+
+        const statusBox = document.getElementById("walletStatus");
+        statusBox.style.display = "block";
+
+        if (!hasID) {
+          statusBox.innerHTML = `<span class="warn">No Agent ID (.ai) found in this wallet.</span> Claim your Agent ID in Binance App first.`;
+        } else if (voted) {
+          statusBox.innerHTML = `<span class="ok">Verified Agent ID Holder.</span> You have already recorded your vote on Poll #1.`;
+        } else {
+          statusBox.innerHTML = `<span class="ok">Verified Agent ID Holder!</span> You are eligible to cast your on-chain signal.`;
+          document.getElementById("bullBtn").disabled = false;
+          document.getElementById("bearBtn").disabled = false;
+        }
+      } catch (err) {
+        alert("Connection failed: " + (err.shortMessage || err.message));
+      }
+    }
+
+    async function vote(isBullish) {
+      if (!signer) return;
+      const msgBox = document.getElementById("txMsg");
+      msgBox.style.display = "block";
+      msgBox.innerText = "Confirm transaction in your wallet...";
+      document.getElementById("bullBtn").disabled = true;
+      document.getElementById("bearBtn").disabled = true;
+
+      try {
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+        const tx = await contract.castSignal(1, isBullish);
+        msgBox.innerText = "Transaction submitted. Waiting for BNB Chain confirmation...";
+        await tx.wait();
+        msgBox.innerHTML = `<span class="ok">Signal recorded on-chain!</span> Tx: ${tx.hash.slice(0, 10)}...`;
+        await loadPublicData();
+      } catch (err) {
+        msgBox.innerHTML = `<span class="warn">Failed:</span> ${err.shortMessage || err.message}`;
+        document.getElementById("bullBtn").disabled = false;
+        document.getElementById("bearBtn").disabled = false;
+      }
+    }
+
+    loadPublicData();
+  </script>
+</body>
+</html>

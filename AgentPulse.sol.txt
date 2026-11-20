@@ -1,0 +1,98 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+/**
+ * @title AgentPulse
+ * @notice Sybil-resistant on-chain market sentiment board gated by Agent ID (.ai) on BNB Chain.
+ * @dev Owner Permissions Disclosure:
+ *      - Owner can ONLY create new sentiment topics via `createTopic`.
+ *      - Contract holds NO user funds, mints NO tokens, charges NO fees/taxes, and CANNOT freeze assets.
+ */
+interface IAgentID {
+    function balanceOf(address owner) external view returns (uint256);
+}
+
+contract AgentPulse {
+    IAgentID public constant AGENT_ID_CONTRACT = IAgentID(address(uint160(0x0060b9262456de011f7d15a54cdd8c48baaa8b022f)));
+    address public owner;
+
+    struct Topic {
+        string question;
+        uint256 bullishVotes;
+        uint256 bearishVotes;
+        uint256 createdAt;
+        bool active;
+    }
+
+    uint256 public topicCount;
+    mapping(uint256 => Topic) public topics;
+    mapping(uint256 => mapping(address => bool)) public hasVoted;
+    mapping(address => bool) public hasInteracted;
+    uint256 public uniqueAgentVoters;
+
+    event TopicCreated(uint256 indexed topicId, string question);
+    event SignalCast(uint256 indexed topicId, address indexed voter, bool isBullish);
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner");
+        _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+        _createTopic("Crypto Market Macro Bias for December 2026?");
+    }
+
+    function _createTopic(string memory _question) internal {
+        topicCount++;
+        topics[topicCount] = Topic({
+            question: _question,
+            bullishVotes: 0,
+            bearishVotes: 0,
+            createdAt: block.timestamp,
+            active: true
+        });
+        emit TopicCreated(topicCount, _question);
+    }
+
+    function createTopic(string calldata _question) external onlyOwner {
+        _createTopic(_question);
+    }
+
+    function checkAgentID(address _user) public view returns (bool) {
+        return AGENT_ID_CONTRACT.balanceOf(_user) > 0;
+    }
+
+    function castSignal(uint256 _topicId, bool _isBullish) external {
+        require(_topicId > 0 && _topicId <= topicCount, "Invalid topic");
+        require(topics[_topicId].active, "Topic inactive");
+        require(checkAgentID(msg.sender), "Agent ID (.ai) required to participate");
+        require(!hasVoted[_topicId][msg.sender], "Already voted on this topic");
+
+        hasVoted[_topicId][msg.sender] = true;
+
+        if (!hasInteracted[msg.sender]) {
+            hasInteracted[msg.sender] = true;
+            uniqueAgentVoters++;
+        }
+
+        if (_isBullish) {
+            topics[_topicId].bullishVotes++;
+        } else {
+            topics[_topicId].bearishVotes++;
+        }
+
+        emit SignalCast(_topicId, msg.sender, _isBullish);
+    }
+
+    function getTopic(uint256 _topicId) external view returns (
+        string memory question,
+        uint256 bullishVotes,
+        uint256 bearishVotes,
+        uint256 createdAt,
+        bool active
+    ) {
+        Topic memory t = topics[_topicId];
+        return (t.question, t.bullishVotes, t.bearishVotes, t.createdAt, t.active);
+    }
+}
