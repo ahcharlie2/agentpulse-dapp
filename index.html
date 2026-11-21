@@ -3,180 +3,338 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AgentPulse — Sybil-Proof On-Chain Sentiment Board</title>
+  <title>AgentPulse — Sybil-Proof On-Chain Market Intelligence</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
   <style>
+    :root {
+      --bg: #0b0e11;
+      --surface: #14171d;
+      --surface-2: #1e2329;
+      --border: #2b3139;
+      --text: #eaecef;
+      --muted: #848e9c;
+      --gold: #f0b90b;
+      --gold-hover: #d9a507;
+      --green: #0ecb81;
+      --red: #f6465d;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: #0b0e11; color: #eaecef; display: flex; justify-content: center; padding: 24px 16px; min-height: 100vh; }
-    .container { max-width: 520px; width: 100%; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-    .logo { font-size: 20px; font-weight: 700; color: #f0b90b; }
-    .badge { font-size: 12px; background: #1e2329; padding: 4px 10px; border-radius: 6px; color: #848e9c; }
-    .card { background: #181a20; border: 1px solid #2b3139; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-    .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer; transition: 0.2s; }
-    .btn-primary { background: #f0b90b; color: #0b0e11; }
-    .btn-primary:hover { background: #d9a507; }
-    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
-    .btn-bull { background: #0ecb81; color: #0b0e11; }
-    .btn-bear { background: #f6465d; color: #ffffff; }
-    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-    .status-box { margin-top: 12px; font-size: 13px; padding: 10px; border-radius: 8px; background: #1e2329; line-height: 1.45; }
-    .ok { color: #0ecb81; }
-    .warn { color: #f6465d; }
-    .question { font-size: 18px; font-weight: 600; line-height: 1.4; margin-bottom: 16px; }
-    .stats { display: flex; justify-content: space-between; font-size: 14px; color: #b7bdc6; margin-bottom: 8px; }
-    .bar-bg { width: 100%; height: 10px; background: #f6465d; border-radius: 6px; overflow: hidden; }
-    .bar-fill { height: 100%; background: #0ecb81; width: 50%; transition: width 0.3s; }
-    .footer { font-size: 12px; color: #848e9c; text-align: center; line-height: 1.5; margin-top: 20px; }
+    body { background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 20px 14px 40px; min-height: 100vh; }
+    .container { max-width: 680px; width: 100%; }
+
+    /* Top Bar */
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-icon { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #f0b90b, #b8860b); color: #0b0e11; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .brand-title { font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+    .brand-sub { font-size: 11px; color: var(--gold); background: rgba(240, 185, 11, 0.12); padding: 2px 8px; border-radius: 99px; border: 1px solid rgba(240, 185, 11, 0.3); }
+
+    .connect-btn { background: var(--gold); color: #0b0e11; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.2s; }
+    .connect-btn:hover { background: var(--gold-hover); }
+    .connect-btn.connected { background: var(--surface-2); color: var(--green); border: 1px solid rgba(14, 203, 129, 0.35); }
+
+    /* Live Market Ticker */
+    .ticker-bar { display: flex; justify-content: space-between; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; font-size: 12px; gap: 10px; flex-wrap: wrap; }
+    .ticker-group { display: flex; gap: 16px; align-items: center; }
+    .ticker-item { display: flex; align-items: center; gap: 6px; }
+    .ticker-sym { color: var(--muted); font-weight: 600; }
+    .ticker-val { font-weight: 700; color: var(--text); }
+    .chain-pill { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 11px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+    /* Telemetry Strip */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+    .stat-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+    .stat-num { font-size: 18px; font-weight: 700; color: var(--gold); }
+    .stat-sub { font-size: 10px; color: var(--green); margin-top: 2px; }
+
+    /* Wallet Banner */
+    .banner { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; font-size: 13px; line-height: 1.5; }
+    .banner.verified { border-color: rgba(14, 203, 129, 0.4); background: rgba(14, 203, 129, 0.06); }
+    .banner.unverified { border-color: rgba(246, 70, 93, 0.4); background: rgba(246, 70, 93, 0.06); }
+    .helper-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+    .mini-btn { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); padding: 6px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; text-decoration: none; }
+    .mini-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* Owner Studio */
+    .admin-box { background: linear-gradient(180deg, rgba(240, 185, 11, 0.08), var(--surface)); border: 1px solid rgba(240, 185, 11, 0.4); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .admin-title { font-size: 13px; font-weight: 700; color: var(--gold); margin-bottom: 10px; display: flex; justify-content: space-between; }
+    .admin-row { display: flex; gap: 8px; }
+    .admin-input { flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; border-radius: 8px; font-size: 13px; outline: none; }
+    .admin-input:focus { border-color: var(--gold); }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 6px; background: var(--surface); padding: 5px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 16px; }
+    .tab { flex: 1; text-align: center; padding: 8px; font-size: 13px; font-weight: 600; color: var(--muted); border-radius: 7px; cursor: pointer; transition: 0.2s; }
+    .tab.active { background: var(--surface-2); color: var(--gold); }
+
+    /* Poll Cards */
+    .poll-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 14px; }
+    .poll-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .poll-id { font-size: 11px; font-weight: 700; color: var(--gold); background: var(--surface-2); padding: 3px 9px; border-radius: 6px; }
+    .poll-meta { font-size: 11px; color: var(--muted); }
+    .poll-q { font-size: 17px; font-weight: 600; line-height: 1.4; margin-bottom: 14px; }
+
+    .ratio-labels { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+    .bull-txt { color: var(--green); }
+    .bear-txt { color: var(--red); }
+    .bar-track { width: 100%; height: 9px; background: var(--red); border-radius: 99px; overflow: hidden; margin-bottom: 14px; }
+    .bar-bull { height: 100%; background: var(--green); width: 50%; transition: width 0.4s ease; }
+
+    .vote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .v-btn { padding: 11px; border: none; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.2s; }
+    .v-bull { background: rgba(14, 203, 129, 0.15); color: var(--green); border: 1px solid rgba(14, 203, 129, 0.4); }
+    .v-bull:hover:not(:disabled) { background: var(--green); color: #0b0e11; }
+    .v-bear { background: rgba(246, 70, 93, 0.15); color: var(--red); border: 1px solid rgba(246, 70, 93, 0.4); }
+    .v-bear:hover:not(:disabled) { background: var(--red); color: #fff; }
+    .v-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .voted-bar { display: flex; justify-content: space-between; align-items: center; background: var(--surface-2); padding: 9px 12px; border-radius: 8px; font-size: 12px; margin-top: 10px; gap: 8px; flex-wrap: wrap; }
+    .share-x { background: #1d9bf0; color: #fff; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; text-decoration: none; }
+
+    /* Live Feed */
+    .feed-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; font-size: 12px; }
+    .feed-left { display: flex; flex-direction: column; gap: 3px; }
+    .feed-addr { font-weight: 700; color: var(--text); }
+    .feed-topic { color: var(--muted); font-size: 11px; }
+    .feed-badge { padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; }
+    .badge-bull { background: rgba(14, 203, 129, 0.15); color: var(--green); }
+    .badge-bear { background: rgba(246, 70, 93, 0.15); color: var(--red); }
+
+    /* Info Box */
+    .info-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; font-size: 13px; line-height: 1.6; color: #b7bdc6; }
+    .info-card h3 { color: var(--gold); font-size: 15px; margin: 12px 0 6px; }
+    .info-card h3:first-child { margin-top: 0; }
+    .info-card ul { padding-left: 18px; margin-bottom: 10px; }
+
+    .toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--surface-2); border: 1px solid var(--gold); color: var(--text); padding: 10px 16px; border-radius: 8px; font-size: 12px; z-index: 99; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.6); max-width: 92%; text-align: center; }
+    .footer { margin-top: 24px; text-align: center; font-size: 11px; color: var(--muted); line-height: 1.6; }
+    .footer a { color: var(--gold); text-decoration: none; }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <div class="logo">AgentPulse</div>
-      <div class="badge">BNB Smart Chain</div>
-    </div>
-
-    <div class="card">
-      <button id="connectBtn" class="btn btn-primary" onclick="connectWallet()">Connect Wallet</button>
-      <div id="walletStatus" class="status-box" style="display:none;"></div>
-    </div>
-
-    <div class="card">
-      <div class="badge" style="display:inline-block; margin-bottom:10px;">Active On-Chain Poll #1</div>
-      <div id="topicQuestion" class="question">Loading on-chain topic...</div>
-
-      <div class="stats">
-        <span id="bullText" class="ok">Bullish: 0 (0%)</span>
-        <span id="bearText" class="warn">Bearish: 0 (0%)</span>
+    <!-- Header -->
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-icon">AP</div>
+        <div>
+          <div class="brand-title">AgentPulse <span class="brand-sub">.ai Gated</span></div>
+        </div>
       </div>
-      <div class="bar-bg"><div id="bullBar" class="bar-fill"></div></div>
-
-      <div class="btn-row">
-        <button id="bullBtn" class="btn btn-bull" onclick="vote(true)" disabled>Vote Bullish</button>
-        <button id="bearBtn" class="btn btn-bear" onclick="vote(false)" disabled>Vote Bearish</button>
-      </div>
-
-      <div id="txMsg" class="status-box" style="display:none;"></div>
+      <button id="connectBtn" class="connect-btn" onclick="connectWallet()">Connect Wallet</button>
     </div>
 
-    <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-      <span style="font-size:13px; color:#848e9c;">Verified Unique Agent ID Voters</span>
-      <strong id="uniqueCount" style="color:#f0b90b; font-size:16px;">0</strong>
+    <!-- Live Market Ticker -->
+    <div class="ticker-bar">
+      <div class="ticker-group">
+        <div class="ticker-item"><span class="ticker-sym">BTC</span><span id="btcPrice" class="ticker-val">Loading...</span></div>
+        <div class="ticker-item"><span class="ticker-sym">BNB</span><span id="bnbPrice" class="ticker-val">Loading...</span></div>
+      </div>
+      <div class="chain-pill"><span class="dot"></span> BNB Smart Chain</div>
+    </div>
+
+    <!-- Telemetry -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Verified .ai Voters</div>
+        <div id="uniqueCount" class="stat-num">-</div>
+        <div class="stat-sub">100% Sybil-Filtered</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active Polls</div>
+        <div id="pollCount" class="stat-num">-</div>
+        <div class="stat-sub">On-Chain Immutable</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Signals Cast</div>
+        <div id="totalSignals" class="stat-num">-</div>
+        <div class="stat-sub">Zero Custody</div>
+      </div>
+    </div>
+
+    <!-- Dynamic Wallet Status Banner -->
+    <div id="walletBanner" class="banner">
+      <strong>Agent ID Verification Required:</strong> Connect the wallet holding your non-transferable <code>.ai</code> Agent ID to cast verifiable market signals.
+      <div class="helper-actions">
+        <button class="mini-btn" onclick="copyDappUrl()">Copy Link for Wallet Browser</button>
+        <a class="mini-btn" href="https://bscscan.com/address/0x0eB425B03D848BdC7Dc5029099a2d187678cdF94#code" target="_blank">Verified Contract</a>
+      </div>
+    </div>
+
+    <!-- Owner Governance Studio (Visible ONLY to Contract Owner) -->
+    <div id="ownerStudio" class="admin-box" style="display:none;">
+      <div class="admin-title">
+        <span>Owner Governance Studio</span>
+        <span>Admin Verified</span>
+      </div>
+      <div class="admin-row">
+        <input id="newQuestionInput" class="admin-input" type="text" placeholder="e.g., Will AI Agent tokens outperform DeFi in Q1 2027?" />
+        <button class="connect-btn" onclick="createNewPoll()">Publish Poll</button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+      <div id="tab-polls" class="tab active" onclick="switchTab('polls')">Sentiment Markets</div>
+      <div id="tab-feed" class="tab" onclick="switchTab('feed')">Live Signal Feed</div>
+      <div id="tab-about" class="tab" onclick="switchTab('about')">Architecture & Safety</div>
+    </div>
+
+    <!-- View 1: Polls -->
+    <div id="view-polls">
+      <div id="pollsContainer" class="poll-card" style="text-align:center; color:var(--muted);">Loading on-chain sentiment markets...</div>
+    </div>
+
+    <!-- View 2: Live On-Chain Feed -->
+    <div id="view-feed" style="display:none;">
+      <div id="feedContainer" class="poll-card" style="text-align:center; color:var(--muted);">Loading recent on-chain signals...</div>
+    </div>
+
+    <!-- View 3: Architecture & Safety -->
+    <div id="view-about" style="display:none;">
+      <div class="info-card">
+        <h3>Why AgentPulse Exists</h3>
+        <p>Traditional on-chain polls fail because Sybil farms can spin up hundreds of empty wallets at near-zero cost. AgentPulse solves this by enforcing hardware/account-bound identity gating directly at the smart contract level.</p>
+
+        <h3>On-Chain Agent ID Integration</h3>
+        <ul>
+          <li>Queries the official SPACE ID Agent ID ERC-721 contract (<code>0x60b9262456de011f7d15a54cdd8c48baaa8b022f</code>) via <code>balanceOf(msg.sender) &gt; 0</code>.</li>
+          <li>Each verified <code>.ai</code> Agent ID holder can cast exactly one immutable vote per market topic.</li>
+          <li>All tallies and unique voter metrics are computed transparently on BNB Smart Chain.</li>
+        </ul>
+
+        <h3>Security & Non-Custodial Guarantee</h3>
+        <ul>
+          <li><strong>Zero Custody:</strong> The contract never holds user funds, tokens, or approvals.</li>
+          <li><strong>No Off-Chain Tracking:</strong> Zero QR pairing codes, zero server sessions, and zero wallet lookup tools.</li>
+          <li><strong>Open-Source:</strong> Fully verified on BscScan and publicly auditable on GitHub.</li>
+        </ul>
+      </div>
     </div>
 
     <div class="footer">
-      Built by ahcharlie.ai • Non-custodial & Open-Source.<br/>
-      Zero user funds held. Only wallets holding an active .ai Agent ID can vote. Informational market sentiment only—not financial advice.
+      Built by <strong>ahcharlie.ai</strong> • <a href="https://github.com/ahcharlie2/agentpulse-dapp" target="_blank">GitHub Open-Source</a> • <a href="https://bscscan.com/address/0x0eB425B03D848BdC7Dc5029099a2d187678cdF94" target="_blank">BscScan</a><br/>
+      Informational crowd sentiment only—not financial advice. Zero funds held.
     </div>
   </div>
+
+  <div id="toast" class="toast"></div>
 
   <script>
     const CONTRACT_ADDRESS = "0x0eB425B03D848BdC7Dc5029099a2d187678cdF94";
     const BSC_RPC = "https://bsc-dataseed.binance.org/";
+    const DAPP_URL = "https://ahcharlie2.github.io/agentpulse-dapp/";
 
     const ABI = [
+      "function owner() view returns (address)",
+      "function topicCount() view returns (uint256)",
+      "function uniqueAgentVoters() view returns (uint256)",
       "function checkAgentID(address _user) view returns (bool)",
       "function hasVoted(uint256, address) view returns (bool)",
-      "function uniqueAgentVoters() view returns (uint256)",
       "function getTopic(uint256 _topicId) view returns (string question, uint256 bullishVotes, uint256 bearishVotes, uint256 createdAt, bool active)",
-      "function castSignal(uint256 _topicId, bool _isBullish)"
+      "function castSignal(uint256 _topicId, bool _isBullish)",
+      "function createTopic(string calldata _question)",
+      "event SignalCast(uint256 indexed topicId, address indexed voter, bool isBullish)"
     ];
 
     let signer = null;
     let userAddress = null;
+    let hasAgentID = false;
+    let topicsCache = [];
 
-    async function loadPublicData() {
+    function showToast(msg) {
+      const t = document.getElementById("toast");
+      t.innerText = msg;
+      t.style.display = "block";
+      setTimeout(() => { t.style.display = "none"; }, 4000);
+    }
+
+    function copyDappUrl() {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(DAPP_URL);
+        showToast("Link copied! Paste it inside Binance Wallet Discover browser.");
+      } else {
+        showToast(DAPP_URL);
+      }
+    }
+
+    function switchTab(tabName) {
+      ["polls", "feed", "about"].forEach(name => {
+        document.getElementById("tab-" + name).classList.toggle("active", name === tabName);
+        document.getElementById("view-" + name).style.display = name === tabName ? "block" : "none";
+      });
+      if (tabName === "feed") loadSignalFeed();
+    }
+
+    async function loadMarketPrices() {
+      try {
+        const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=%5B%22BTCUSDT%22,%22BNBUSDT%22%5D');
+        const data = await res.json();
+        data.forEach(item => {
+          const price = parseFloat(item.lastPrice).toLocaleString(undefined, { maximumFractionDigits: 2 });
+          const chg = parseFloat(item.priceChangePercent).toFixed(2);
+          const color = chg >= 0 ? "var(--green)" : "var(--red)";
+          const sign = chg >= 0 ? "+" : "";
+          const html = `$${price} <span style="color:${color}; font-size:11px;">(${sign}${chg}%)</span>`;
+          if (item.symbol === "BTCUSDT") document.getElementById("btcPrice").innerHTML = html;
+          if (item.symbol === "BNBUSDT") document.getElementById("bnbPrice").innerHTML = html;
+        });
+      } catch (e) {
+        document.getElementById("btcPrice").innerText = "Live";
+        document.getElementById("bnbPrice").innerText = "Live";
+      }
+    }
+
+    async function loadOnChainData() {
       try {
         const provider = new ethers.JsonRpcProvider(BSC_RPC);
         const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
-        const topic = await contract.getTopic(1);
-        const unique = await contract.uniqueAgentVoters();
 
-        const bull = Number(topic[1]);
-        const bear = Number(topic[2]);
-        const total = bull + bear;
-        const bullPct = total > 0 ? Math.round((bull / total) * 100) : 50;
+        const [countBN, uniqueBN] = await Promise.all([
+          contract.topicCount(),
+          contract.uniqueAgentVoters()
+        ]);
 
-        document.getElementById("topicQuestion").innerText = topic[0];
-        document.getElementById("bullText").innerText = `Bullish: ${bull} (${total > 0 ? bullPct : 0}%)`;
-        document.getElementById("bearText").innerText = `Bearish: ${bear} (${total > 0 ? 100 - bullPct : 0}%)`;
-        document.getElementById("bullBar").style.width = `${bullPct}%`;
-        document.getElementById("uniqueCount").innerText = unique.toString();
-      } catch (e) {
-        console.error(e);
+        const count = Number(countBN);
+        document.getElementById("pollCount").innerText = count.toString();
+        document.getElementById("uniqueCount").innerText = uniqueBN.toString();
+
+        const topicPromises = [];
+        for (let i = count; i >= 1; i--) {
+          topicPromises.push(contract.getTopic(i).then(res => ({ id: i, data: res })));
+        }
+
+        const results = await Promise.all(topicPromises);
+        topicsCache = results;
+
+        let totalVotesAll = 0;
+        results.forEach(r => {
+          totalVotesAll += Number(r.data[1]) + Number(r.data[2]);
+        });
+        document.getElementById("totalSignals").innerText = totalVotesAll.toString();
+
+        await renderPolls();
+      } catch (err) {
+        console.error(err);
+        document.getElementById("pollsContainer").innerText = "Unable to reach BNB Chain RPC. Please refresh.";
       }
     }
 
-    async function connectWallet() {
-      const statusBox = document.getElementById("walletStatus");
-      statusBox.style.display = "block";
-      statusBox.innerText = "Connecting wallet...";
-
-      if (!window.ethereum) {
-        statusBox.innerHTML = `<span class="warn">Web3 provider not found.</span> Open inside Binance Wallet Discover browser.`;
+    async function renderPolls() {
+      const container = document.getElementById("pollsContainer");
+      if (topicsCache.length === 0) {
+        container.innerHTML = "No active polls found.";
         return;
       }
 
-      try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        const network = await provider.getNetwork();
+      const provider = new ethers.JsonRpcProvider(BSC_RPC);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
 
-        if (network.chainId !== 56n) {
-          await window.ethereum.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: "0x38" }]
-          });
-        }
-
-        signer = await provider.getSigner();
-        userAddress = await signer.getAddress();
-        document.getElementById("connectBtn").innerText = userAddress.slice(0, 6) + "..." + userAddress.slice(-4);
-        statusBox.innerText = "Verifying .ai Agent ID on BNB Chain...";
-
-        const readProvider = new ethers.JsonRpcProvider(BSC_RPC);
-        const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, readProvider);
-        const hasID = await readContract.checkAgentID(userAddress);
-        const voted = await readContract.hasVoted(1, userAddress);
-
-        if (!hasID) {
-          statusBox.innerHTML = `<span class="warn">No Agent ID (.ai) found in ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}.</span> Switch to the wallet holding your .ai Agent ID.`;
-        } else if (voted) {
-          statusBox.innerHTML = `<span class="ok">Verified Agent ID Holder!</span> You have already recorded your vote on Poll #1.`;
-        } else {
-          statusBox.innerHTML = `<span class="ok">Verified Agent ID Holder!</span> You are eligible to cast your on-chain signal.`;
-          document.getElementById("bullBtn").disabled = false;
-          document.getElementById("bearBtn").disabled = false;
-        }
-      } catch (err) {
-        statusBox.innerHTML = `<span class="warn">Error:</span> ${err.shortMessage || err.message}`;
-      }
-    }
-
-    async function vote(isBullish) {
-      if (!signer) return;
-      const msgBox = document.getElementById("txMsg");
-      msgBox.style.display = "block";
-      msgBox.innerText = "Confirm transaction in your wallet...";
-      document.getElementById("bullBtn").disabled = true;
-      document.getElementById("bearBtn").disabled = true;
-
-      try {
-        const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-        const tx = await contract.castSignal(1, isBullish);
-        msgBox.innerText = "Transaction submitted. Waiting for BNB Chain confirmation...";
-        await tx.wait();
-        msgBox.innerHTML = `<span class="ok">Signal recorded on-chain!</span> Tx: ${tx.hash.slice(0, 10)}...`;
-        await loadPublicData();
-      } catch (err) {
-        msgBox.innerHTML = `<span class="warn">Failed:</span> ${err.shortMessage || err.message}`;
-        document.getElementById("bullBtn").disabled = false;
-        document.getElementById("bearBtn").disabled = false;
-      }
-    }
-
-    loadPublicData();
-  </script>
-</body>
-</html>
+      let votedMap = {};
+      if (userAddress) {
+        const checks = await Promise.all(
+          topicsCache.map(t => contract.hasVoted(t.id, userAddress).then(v => ({ id: t.id, voted: v })))
+        );
+        checks.forEach(c =>
