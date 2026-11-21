@@ -54,7 +54,6 @@
     .passport-card.unverified { border-color: rgba(240, 185, 11, 0.45); background: linear-gradient(135deg, rgba(240, 185, 11, 0.07), var(--surface)); }
     .passport-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
     .tier-badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 6px; background: rgba(240,185,11,0.15); color: var(--gold); border: 1px solid rgba(240,185,11,0.3); }
-    .passport-meta { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: var(--muted); margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06); }
     .helper-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
     .mini-btn { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); padding: 6px 11px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; text-decoration: none; transition: 0.2s; }
     .mini-btn:hover { border-color: var(--gold); color: var(--gold); }
@@ -100,11 +99,12 @@
     .v-bear:hover:not(:disabled) { background: var(--red); color: #fff; }
     .v-btn:disabled { opacity: 0.38; cursor: not-allowed; }
 
-    /* Agentic Wallet Direct Execution Drawer */
-    .agent-exec-toggle { margin-top: 10px; width: 100%; background: var(--surface-2); border: 1px dashed rgba(240, 185, 11, 0.4); color: var(--gold); padding: 8px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; text-align: center; }
-    .agent-exec-box { display: none; margin-top: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 11px; color: var(--muted); line-height: 1.5; }
-    .agent-exec-box code { display: block; background: var(--surface-2); color: var(--text); padding: 6px 8px; border-radius: 6px; margin: 6px 0; word-break: break-all; font-size: 10px; }
+    /* Agentic Wallet Direct Execution Box */
+    .agent-exec-box { margin-top: 12px; background: var(--bg); border: 1px dashed rgba(240, 185, 11, 0.45); border-radius: 9px; padding: 12px; font-size: 11px; color: var(--muted); line-height: 1.5; }
+    .agent-exec-title { color: var(--gold); font-weight: 700; margin-bottom: 6px; font-size: 12px; }
     .agent-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .hex-details { margin-top: 8px; font-size: 10px; color: var(--muted); }
+    .hex-details code { display: block; background: var(--surface-2); color: var(--text); padding: 5px 7px; border-radius: 5px; margin-top: 4px; word-break: break-all; }
 
     .voted-bar { display: flex; justify-content: space-between; align-items: center; background: var(--surface-2); padding: 9px 12px; border-radius: 8px; font-size: 12px; margin-top: 10px; gap: 8px; flex-wrap: wrap; }
     .share-x { background: #1d9bf0; color: #fff; border: none; padding: 5px 11px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; text-decoration: none; }
@@ -158,7 +158,7 @@
       </div>
       <div class="stat-card">
         <div class="stat-label">Active Markets</div>
-        <div id="pollCount" class="stat-num">0</div>
+        <div id="pollCount" class="stat-num">2</div>
         <div class="stat-sub">On-Chain Immutable</div>
       </div>
       <div class="stat-card">
@@ -174,10 +174,11 @@
         <strong>Agent ID Passport Verification</strong>
         <span class="tier-badge">ERC-721 Gated</span>
       </div>
-      <div>Connect your wallet holding a <code>.ai</code> Agent ID, or use the <strong>Agentic Wallet AI Command</strong> button inside any market below to vote directly from your isolated Agentic Wallet.</div>
+      <div>Connect your wallet holding a <code>.ai</code> Agent ID, or copy the 1-click <strong>Agentic Wallet AI Command</strong> inside any market below to vote directly from your isolated Binance Agentic Wallet.</div>
       <div class="helper-actions">
         <button class="mini-btn" onclick="copyText(DAPP_URL, 'dApp link copied!')">Copy dApp Link</button>
-        <a class="mini-btn" href="https://bscscan.com/address/0x0eB425B03D848BdC7Dc5029099a2d187678cdF94#code" target="_blank">Verified Contract ↗</a>
+        <button class="mini-btn" onclick="loadOnChainData()">Sync On-Chain Data</button>
+        <a class="mini-btn" href="https://bscscan.com/address/0x0eB425B03D848BdC7Dc5029099a2d187678cdF94#code" target="_blank">Contract ↗</a>
       </div>
     </div>
 
@@ -211,7 +212,7 @@
         <button id="flt-unvoted" class="f-pill" onclick="setFilter('unvoted')">Actionable (Unvoted)</button>
         <button id="flt-voted" class="f-pill" onclick="setFilter('voted')">My Voted Signals</button>
       </div>
-      <div id="pollsContainer" class="poll-card" style="text-align:center; color:var(--muted);">Syncing BNB Smart Chain state...</div>
+      <div id="pollsContainer"></div>
     </div>
 
     <!-- View 2: Live Signal Feed -->
@@ -253,10 +254,11 @@
     const CONTRACT_ADDRESS = "0x0eB425B03D848BdC7Dc5029099a2d187678cdF94";
     const DAPP_URL = "https://ahcharlie2.github.io/agentpulse-dapp/";
     const BSC_RPCS = [
+      "https://bsc.publicnode.com",
       "https://bsc-dataseed.binance.org/",
       "https://bsc-dataseed1.defibit.io/",
       "https://bsc-dataseed1.ninicoin.io/",
-      "https://bsc.publicnode.com"
+      "https://1rpc.io/bnb"
     ];
 
     const KECCAK_RC = [
@@ -360,34 +362,7 @@
       return { question, bull, bear, createdAt, active };
     }
 
-    async function rpcRequest(method, params) {
-      for (const url of BSC_RPCS) {
-        try {
-          const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 5000);
-          const res = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
-            signal: controller.signal
-          });
-          clearTimeout(timer);
-          const json = await res.json();
-          if (json && json.result !== undefined) return json.result;
-        } catch (e) {}
-      }
-      throw new Error("RPC timeout");
-    }
-
-    const ethCall = (data) => rpcRequest("eth_call", [{ to: CONTRACT_ADDRESS, data: "0x" + data }, "latest"]);
-
-    let userAddress = null;
-    let hasAgentID = false;
-    let topicsCache = [];
-    let votedMap = {};
-    let currentFilter = "all";
     let discoveredProvider = null;
-
     window.addEventListener("eip6963:announceProvider", (event) => {
       if (event.detail && event.detail.provider) discoveredProvider = event.detail.provider;
     });
@@ -400,6 +375,53 @@
       return null;
     }
 
+    async function rpcRequest(method, params) {
+      // 1. Prefer authenticated injected wallet node first (zero rate limit / fast on mobile)
+      const eth = getProvider();
+      if (eth) {
+        try {
+          const res = await eth.request({ method, params });
+          if (res !== undefined && res !== null) return res;
+        } catch (e) {}
+      }
+
+      // 2. Race public RPCs concurrently so fastest node wins
+      const attempts = BSC_RPCS.map(async (url) => {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 12000);
+        try {
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+            signal: controller.signal
+          });
+          clearTimeout(timer);
+          const json = await res.json();
+          if (json && json.result !== undefined) return json.result;
+          throw new Error("Invalid RPC payload");
+        } catch (err) {
+          clearTimeout(timer);
+          throw err;
+        }
+      });
+
+      return Promise.any(attempts);
+    }
+
+    const ethCall = (data) => rpcRequest("eth_call", [{ to: CONTRACT_ADDRESS, data: "0x" + data }, "latest"]);
+
+    let userAddress = null;
+    let hasAgentID = false;
+    let votedMap = {};
+    let currentFilter = "all";
+
+    // Pre-seeded with confirmed on-chain markets so UI renders immediately even on slow mobile data
+    let topicsCache = [
+      { id: 2, question: "Will BNB Chain AI Agents surpass DeFi daily active users in 2027?", bull: 0, bear: 0, active: true },
+      { id: 1, question: "Crypto Market Macro Bias for December 2026?", bull: 0, bear: 0, active: true }
+    ];
+
     function showToast(msg) {
       const t = document.getElementById("toast");
       t.innerText = msg;
@@ -408,23 +430,23 @@
     }
 
     function copyText(txt, toastMsg) {
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(txt);
-        showToast(toastMsg || "Copied to clipboard!");
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(() => {
+          showToast(toastMsg || "Copied!");
+        }).catch(() => fallbackCopy(txt, toastMsg));
       } else {
-        const el = document.createElement("textarea");
-        el.value = txt;
-        document.body.appendChild(el);
-        el.select();
-        document.execCommand("copy");
-        document.body.removeChild(el);
-        showToast(toastMsg || "Copied!");
+        fallbackCopy(txt, toastMsg);
       }
     }
 
-    function toggleAgentDrawer(id) {
-      const box = document.getElementById("agent-drawer-" + id);
-      if (box) box.style.display = box.style.display === "block" ? "none" : "block";
+    function fallbackCopy(txt, toastMsg) {
+      const el = document.createElement("textarea");
+      el.value = txt;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+      showToast(toastMsg || "Copied!");
     }
 
     function usePreset(text) {
@@ -465,82 +487,88 @@
 
     async function loadOnChainData() {
       try {
-        const [countHex, uniqueHex] = await Promise.all([
-          ethCall(SEL.topicCount),
-          ethCall(SEL.uniqueAgentVoters)
-        ]);
+        const countHex = await ethCall(SEL.topicCount);
+        const uniqueHex = await ethCall(SEL.uniqueAgentVoters);
+
         const count = Number(BigInt(countHex));
         const unique = Number(BigInt(uniqueHex));
         document.getElementById("pollCount").innerText = count.toString();
         document.getElementById("uniqueCount").innerText = unique.toString();
 
-        const promises = [];
+        const loaded = [];
         for (let i = count; i >= 1; i--) {
-          promises.push(ethCall(SEL.getTopic + padUint(i)).then(hex => ({ id: i, ...decodeGetTopic(hex) })));
+          const hex = await ethCall(SEL.getTopic + padUint(i));
+          loaded.push({ id: i, ...decodeGetTopic(hex) });
         }
-        topicsCache = await Promise.all(promises);
+        topicsCache = loaded;
 
         let totalSignals = 0;
         topicsCache.forEach(t => { totalSignals += (t.bull + t.bear); });
         document.getElementById("totalSignals").innerText = totalSignals.toString();
 
-        if (userAddress) await refreshUserStates();
-        else renderPolls();
+        renderPolls();
       } catch (err) {
-        document.getElementById("pollsContainer").innerHTML = `RPC busy. <button class="mini-btn" onclick="loadOnChainData()">Retry Sync</button>`;
+        console.warn("Background RPC sync delayed:", err);
+        renderPolls();
       }
     }
 
     async function refreshUserStates() {
       if (!userAddress) return;
       const banner = document.getElementById("walletBanner");
-
-      const [idHex, ownerHex, ...voteHexes] = await Promise.all([
-        ethCall(SEL.checkAgentID + padAddr(userAddress)),
-        ethCall(SEL.owner),
-        ...topicsCache.map(t => ethCall(SEL.hasVoted + padUint(t.id) + padAddr(userAddress)))
-      ]);
-
-      hasAgentID = BigInt(idHex) > 0n;
-      const contractOwner = "0x" + ownerHex.slice(-40);
-
-      votedMap = {};
-      let myVoteCount = 0;
-      topicsCache.forEach((t, idx) => {
-        const v = BigInt(voteHexes[idx]) > 0n;
-        votedMap[t.id] = v;
-        if (v) myVoteCount++;
-      });
-
-      if (userAddress.toLowerCase() === contractOwner.toLowerCase()) {
-        document.getElementById("ownerStudio").style.display = "block";
-      }
-
       const shortAddr = userAddress.slice(0, 6) + "..." + userAddress.slice(-4);
-      if (hasAgentID) {
-        let tier = myVoteCount >= 2 ? "Senior Signal Analyst" : "Verified .ai Contributor";
-        banner.className = "passport-card verified";
-        banner.innerHTML = `
-          <div class="passport-top">
-            <strong style="color:var(--green);">✓ Verified .ai Agent ID Passport (${shortAddr})</strong>
-            <span class="tier-badge">${tier}</span>
-          </div>
-          <div>On-chain <code>ERC-721</code> identity confirmed. Cast your vote below.</div>
-        `;
-      } else {
+
+      try {
+        const idHex = await ethCall(SEL.checkAgentID + padAddr(userAddress));
+        const ownerHex = await ethCall(SEL.owner);
+
+        hasAgentID = BigInt(idHex) > 0n;
+        const contractOwner = "0x" + ownerHex.slice(-40);
+
+        if (userAddress.toLowerCase() === contractOwner.toLowerCase()) {
+          document.getElementById("ownerStudio").style.display = "block";
+        }
+
+        votedMap = {};
+        let myVoteCount = 0;
+        for (const t of topicsCache) {
+          const vHex = await ethCall(SEL.hasVoted + padUint(t.id) + padAddr(userAddress));
+          const v = BigInt(vHex) > 0n;
+          votedMap[t.id] = v;
+          if (v) myVoteCount++;
+        }
+
+        if (hasAgentID) {
+          let tier = myVoteCount >= 2 ? "Senior Signal Analyst" : "Verified .ai Contributor";
+          banner.className = "passport-card verified";
+          banner.innerHTML = `
+            <div class="passport-top">
+              <strong style="color:var(--green);">✓ Verified .ai Agent ID Passport (${shortAddr})</strong>
+              <span class="tier-badge">${tier}</span>
+            </div>
+            <div>On-chain <code>ERC-721</code> identity confirmed. Cast your vote directly below.</div>
+          `;
+        } else {
+          banner.className = "passport-card unverified";
+          banner.innerHTML = `
+            <div class="passport-top">
+              <strong style="color:var(--gold);">MPC Wallet Connected (${shortAddr})</strong>
+              <span class="tier-badge">Isolated Agentic Wallet Mode</span>
+            </div>
+            <div>Your <code>.ai</code> Agent ID is stored in your isolated <strong>Binance Agentic Wallet</strong>. Tap <strong>"Copy Bullish/Bearish AI Command"</strong> on any market below and send it inside your Agentic Wallet!</div>
+          `;
+        }
+      } catch (e) {
         banner.className = "passport-card unverified";
         banner.innerHTML = `
           <div class="passport-top">
-            <strong style="color:var(--gold);">MPC Wallet Connected (${shortAddr})</strong>
-            <span class="tier-badge">Isolated Agentic Wallet Mode</span>
+            <strong style="color:var(--gold);">Wallet Connected (${shortAddr})</strong>
+            <span class="tier-badge">Agentic Execution Ready</span>
           </div>
-          <div>Your <code>.ai</code> Agent ID lives in your separate <strong>Agentic Wallet</strong> address. Tap <strong>"Execute via Agentic Wallet AI"</strong> on any market below to copy the 1-click command and run it inside your Binance Agentic Wallet!</div>
-          <div class="helper-actions">
-            <button class="mini-btn" onclick="connectWallet()">Re-Check Wallet</button>
-            <button class="mini-btn" onclick="loadOnChainData()">Refresh Live Votes</button>
-          </div>
+          <div>Use the 1-click <strong>Copy AI Command</strong> buttons below to execute votes from your isolated Binance Agentic Wallet.</div>
         `;
       }
+
       renderPolls();
     }
 
@@ -577,8 +605,8 @@
         const bullHex = "0x" + SEL.castSignal + padUint(t.id) + padBool(true);
         const bearHex = "0x" + SEL.castSignal + padUint(t.id) + padBool(false);
 
-        const bullPrompt = `Send a contract call transaction on BNB Smart Chain (chainId 56) to contract ${CONTRACT_ADDRESS} with value 0 BNB and hex data ${bullHex}`;
-        const bearPrompt = `Send a contract call transaction on BNB Smart Chain (chainId 56) to contract ${CONTRACT_ADDRESS} with value 0 BNB and hex data ${bearHex}`;
+        const bullPrompt = `Send a contract call on BNB Smart Chain (chainId 56) to ${CONTRACT_ADDRESS} with value 0 BNB and hex data ${bullHex}`;
+        const bearPrompt = `Send a contract call on BNB Smart Chain (chainId 56) to ${CONTRACT_ADDRESS} with value 0 BNB and hex data ${bearHex}`;
 
         const tweetText = encodeURIComponent(`just cast my verified .ai on-chain signal on "${t.question}" via AgentPulse.\n\nsybil-proof market sentiment on bnb chain:\n${DAPP_URL}\n\n#BinanceWalletHackathon #AgenticWallet`);
 
@@ -596,21 +624,24 @@
             </div>
             <div class="bar-track"><div class="bar-bull" style="width:${barWidth}%"></div></div>
 
-            <div class="vote-grid">
-              <button class="v-btn v-bull" onclick="castVote(${t.id}, true)" ${canVote ? "" : "disabled"}>Vote Bullish</button>
-              <button class="v-btn v-bear" onclick="castVote(${t.id}, false)" ${canVote ? "" : "disabled"}>Vote Bearish</button>
-            </div>
-
-            <button class="agent-exec-toggle" onclick="toggleAgentDrawer(${t.id})">⚡ Execute via Binance Agentic Wallet AI / Calldata</button>
-            <div id="agent-drawer-${t.id}" class="agent-exec-box">
-              <div><strong>Using Isolated Agentic Wallet?</strong> Copy the AI command below and paste it into your Binance Agentic Wallet chat (make sure your Agentic Wallet holds ~$0.05 BNB for gas):</div>
-              <div class="agent-btn-row">
-                <button class="v-btn v-bull" style="padding:8px; font-size:11px;" onclick="copyText('${bullPrompt}', 'Bullish AI Command Copied!')">Copy Bullish AI Command</button>
-                <button class="v-btn v-bear" style="padding:8px; font-size:11px;" onclick="copyText('${bearPrompt}', 'Bearish AI Command Copied!')">Copy Bearish AI Command</button>
+            ${canVote ? `
+              <div class="vote-grid">
+                <button class="v-btn v-bull" onclick="castVote(${t.id}, true)">Vote Bullish</button>
+                <button class="v-btn v-bear" onclick="castVote(${t.id}, false)">Vote Bearish</button>
               </div>
-              <div style="margin-top:8px;">Contract: <code>${CONTRACT_ADDRESS}</code></div>
-              <div>Bullish Hex Data: <code>${bullHex}</code></div>
-              <div>Bearish Hex Data: <code>${bearHex}</code></div>
+            ` : ""}
+
+            <div class="agent-exec-box">
+              <div class="agent-exec-title">⚡ Vote via Binance Agentic Wallet (.ai Holder)</div>
+              <div>Copy command & paste in your <strong>Binance Agentic Wallet</strong> chat (keep ~$0.05 BNB for gas):</div>
+              <div class="agent-btn-row">
+                <button class="v-btn v-bull" style="padding:9px; font-size:11px;" onclick="copyText('${bullPrompt}', 'Bullish Command Copied!')">Copy Bullish Command</button>
+                <button class="v-btn v-bear" style="padding:9px; font-size:11px;" onclick="copyText('${bearPrompt}', 'Bearish Command Copied!')">Copy Bearish Command</button>
+              </div>
+              <div class="hex-details">
+                <div>Contract: <code>${CONTRACT_ADDRESS}</code></div>
+                <div>Bullish Data: <code>${bullHex}</code></div>
+              </div>
             </div>
 
             ${isVoted ? `
@@ -689,6 +720,7 @@
         }
 
         await refreshUserStates();
+        await loadOnChainData();
       } catch (err) {
         if (!silent) showToast("Connection canceled or failed.");
       }
@@ -747,9 +779,11 @@
       }
     }
 
+    // Immediate render + async sync
+    renderPolls();
     loadMarketPrices();
     loadOnChainData();
-    setTimeout(() => connectWallet(true), 500);
+    setTimeout(() => connectWallet(true), 400);
   </script>
 </body>
 </html>
