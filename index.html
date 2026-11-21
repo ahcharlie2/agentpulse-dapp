@@ -166,7 +166,10 @@ async function loadChain(){
     const n=Number(BigInt(await call(S.count)));
     $("#nQ").textContent=n;
     $("#nV").textContent=Number(BigInt(await call(S.uniq)));
-    topics=await Promise.all(Array.from({length:n},(_,k)=>{const id=n-k;return call(S.topic+pad(id)).then(h=>({id,...decodeTopic(h)}))}));
+    const all=await Promise.all(Array.from({length:n},(_,k)=>{const id=n-k;return call(S.topic+pad(id)).then(h=>({id,...decodeTopic(h)}))}));
+    const seen=new Set();
+    topics=all.slice().sort((a,b)=>a.id-b.id).filter(t=>{const dup=seen.has(t.question);seen.add(t.question);return !(dup&&t.bull+t.bear===0)}).sort((a,b)=>b.id-a.id);
+    $("#nQ").textContent=topics.length;
     $("#nS").textContent=topics.reduce((a,t)=>a+t.bull+t.bear,0);
     if(me)await loadUser();
   }catch(e){toast("Could not read BNB Smart Chain. Check your connection and tap Refresh.")}
@@ -194,7 +197,7 @@ function render(){
     return `<article class="q"><div class="meta">Question ${t.id} · ${tot} vote${tot===1?"":"s"}</div>
 <h3>${esc(t.question)}</h3>
 <div class="band" role="img" aria-label="${a} ${pa} percent, ${b} ${pb} percent">${tot
- ?`<i class="a" style="flex-grow:${t.bull}">${t.bull?a+" "+pa+"%":""}</i><i class="b" style="flex-grow:${t.bear}">${t.bear?b+" "+pb+"%":""}</i>`
+ ?`${t.bull?`<i class="a" style="flex-grow:${t.bull}">${a} ${pa}%</i>`:""}${t.bear?`<i class="b" style="flex-grow:${t.bear}">${b} ${pb}%</i>`:""}`
  :`<i class="n">No votes yet. Be the first.</i>`}</div>
 ${can?`<div class="row"><button class="btn a" data-vote="${t.id}:1">Vote ${a}</button><button class="btn b" data-vote="${t.id}:0">Vote ${b}</button></div>`:""}
 ${voted[t.id]?`<p class="done">Your vote is recorded. <a target="_blank" rel="noopener" href="https://x.com/intent/tweet?text=${tw}">Share on X</a></p>`:""}
@@ -221,7 +224,7 @@ function renderToday(){
   el.innerHTML=`<article class="q"><div class="meta">Daily Safety Drill · Day ${Math.min(day,n-1)+1} of ${n} · ${tot} vote${tot===1?"":"s"}</div>
 <h3>${esc(L.q)}</h3>
 ${can?`<div class="row"><button class="btn a" data-vote="${t.id}:1">Sign it</button><button class="btn b" data-vote="${t.id}:0">Reject it</button></div>`:""}
-${show?`<div class="band" style="margin-top:12px">${tot?`<i class="a" style="flex-grow:${t.bull}">${t.bull?"Sign "+pa+"%":""}</i><i class="b" style="flex-grow:${t.bear}">${t.bear?"Reject "+pb+"%":""}</i>`:`<i class="n">No votes yet</i>`}</div>
+${show?`<div class="band" style="margin-top:12px">${tot?`${t.bull?`<i class="a" style="flex-grow:${t.bull}">Sign ${pa}%</i>`:""}${t.bear?`<i class="b" style="flex-grow:${t.bear}">Reject ${pb}%</i>`:""}`:`<i class="n">No votes yet</i>`}</div>
 <div style="background:var(--paper);border-radius:8px;padding:10px 12px;font-size:14px"><b>${L.ok?"Verdict: safe to sign, after a quick check.":"Verdict: reject it."}</b> ${esc(L.why)}</div>`
 :`<button class="btn ghost" style="color:var(--accent);margin-top:12px" data-act="reveal" data-id="${t.id}">${can?"Skip voting and show the answer":"Show the answer"}</button>`}
 <p class="note" style="margin-top:12px">${me&&holder?"Your progress: "+done+" of "+n+" drills.":"Hold an Agent ID to vote and track progress."} <a target="_blank" rel="noopener" href="https://x.com/intent/tweet?text=${tw}">Share on X</a></p></article>`;
@@ -279,6 +282,11 @@ async function connect(silent){
 }
 
 async function send(data){
+  if(send.busy)return toast("Please wait for the current transaction to finish.");
+  send.busy=true;
+  try{return await sendTx(data)}finally{send.busy=false}
+}
+async function sendTx(data){
   const e=prov();
   if(!e||!me)return toast("Connect your wallet first.");
   if(!await ensureBsc(e))return toast("Switch your wallet to BNB Smart Chain, then try again.");
@@ -312,6 +320,7 @@ document.addEventListener("click",e=>{
   if(t.dataset.act==="drills")return publishDrills();
   if(t.dataset.act==="publish"){
     const q=$("#newQ").value.trim();if(!q)return toast("Write or pick a question first.");
+    if(topics.some(x=>x.question===q))return toast("This question is already published.");
     send(S.create+enc(q)).then(()=>{$("#newQ").value=""});
   }
 });
