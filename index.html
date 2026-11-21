@@ -20,7 +20,7 @@
     .btn-bull { background: #0ecb81; color: #0b0e11; }
     .btn-bear { background: #f6465d; color: #ffffff; }
     .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-    .status-box { margin-top: 12px; font-size: 13px; padding: 10px; border-radius: 8px; background: #1e2329; }
+    .status-box { margin-top: 12px; font-size: 13px; padding: 10px; border-radius: 8px; background: #1e2329; line-height: 1.45; }
     .ok { color: #0ecb81; }
     .warn { color: #f6465d; }
     .question { font-size: 18px; font-weight: 600; line-height: 1.4; margin-bottom: 16px; }
@@ -87,7 +87,6 @@
     let userAddress = null;
 
     async function loadPublicData() {
-      if (!CONTRACT_ADDRESS.startsWith("0x")) return;
       try {
         const provider = new ethers.JsonRpcProvider(BSC_RPC);
         const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
@@ -110,10 +109,15 @@
     }
 
     async function connectWallet() {
+      const statusBox = document.getElementById("walletStatus");
+      statusBox.style.display = "block";
+      statusBox.innerText = "Connecting wallet...";
+
       if (!window.ethereum) {
-        alert("Please open this page inside Binance Wallet dApp Browser or install a Web3 wallet.");
+        statusBox.innerHTML = `<span class="warn">Web3 provider not found.</span> Open inside Binance Wallet Discover browser.`;
         return;
       }
+
       try {
         const provider = new ethers.BrowserProvider(window.ethereum);
         await provider.send("eth_requestAccounts", []);
@@ -129,25 +133,24 @@
         signer = await provider.getSigner();
         userAddress = await signer.getAddress();
         document.getElementById("connectBtn").innerText = userAddress.slice(0, 6) + "..." + userAddress.slice(-4);
+        statusBox.innerText = "Verifying .ai Agent ID on BNB Chain...";
 
-        const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-        const hasID = await contract.checkAgentID(userAddress);
-        const voted = await contract.hasVoted(1, userAddress);
-
-        const statusBox = document.getElementById("walletStatus");
-        statusBox.style.display = "block";
+        const readProvider = new ethers.JsonRpcProvider(BSC_RPC);
+        const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, readProvider);
+        const hasID = await readContract.checkAgentID(userAddress);
+        const voted = await readContract.hasVoted(1, userAddress);
 
         if (!hasID) {
-          statusBox.innerHTML = `<span class="warn">No Agent ID (.ai) found in this wallet.</span> Claim your Agent ID in Binance App first.`;
+          statusBox.innerHTML = `<span class="warn">No Agent ID (.ai) found in ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}.</span> Switch to the wallet holding your .ai Agent ID.`;
         } else if (voted) {
-          statusBox.innerHTML = `<span class="ok">Verified Agent ID Holder.</span> You have already recorded your vote on Poll #1.`;
+          statusBox.innerHTML = `<span class="ok">Verified Agent ID Holder!</span> You have already recorded your vote on Poll #1.`;
         } else {
           statusBox.innerHTML = `<span class="ok">Verified Agent ID Holder!</span> You are eligible to cast your on-chain signal.`;
           document.getElementById("bullBtn").disabled = false;
           document.getElementById("bearBtn").disabled = false;
         }
       } catch (err) {
-        alert("Connection failed: " + (err.shortMessage || err.message));
+        statusBox.innerHTML = `<span class="warn">Error:</span> ${err.shortMessage || err.message}`;
       }
     }
 
