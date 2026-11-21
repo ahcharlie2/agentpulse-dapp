@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AgentPulse — Sybil-Proof On-Chain Market Intelligence</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
   <style>
     :root {
       --bg: #0b0e11;
@@ -17,66 +16,78 @@
       --gold-hover: #d9a507;
       --green: #0ecb81;
       --red: #f6465d;
+      --blue: #3b82f6;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 20px 14px 40px; min-height: 100vh; }
+    body { background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 18px 14px 44px; min-height: 100vh; }
     .container { max-width: 680px; width: 100%; }
 
-    /* Top Bar */
-    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    /* Header */
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
     .brand { display: flex; align-items: center; gap: 10px; }
-    .brand-icon { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #f0b90b, #b8860b); color: #0b0e11; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 16px; }
-    .brand-title { font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
-    .brand-sub { font-size: 11px; color: var(--gold); background: rgba(240, 185, 11, 0.12); padding: 2px 8px; border-radius: 99px; border: 1px solid rgba(240, 185, 11, 0.3); }
+    .brand-icon { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, #f0b90b, #b8860b); color: #0b0e11; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 15px; box-shadow: 0 2px 10px rgba(240,185,11,0.25); }
+    .brand-title { font-size: 19px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; display: flex; align-items: center; gap: 7px; }
+    .brand-sub { font-size: 10px; font-weight: 700; color: var(--gold); background: rgba(240, 185, 11, 0.12); padding: 2px 8px; border-radius: 99px; border: 1px solid rgba(240, 185, 11, 0.35); }
 
-    .connect-btn { background: var(--gold); color: #0b0e11; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.2s; }
+    .connect-btn { background: var(--gold); color: #0b0e11; border: none; padding: 9px 15px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.2s; }
     .connect-btn:hover { background: var(--gold-hover); }
-    .connect-btn.connected { background: var(--surface-2); color: var(--green); border: 1px solid rgba(14, 203, 129, 0.35); }
+    .connect-btn.connected { background: var(--surface-2); color: var(--green); border: 1px solid rgba(14, 203, 129, 0.4); }
 
-    /* Live Market Ticker */
-    .ticker-bar { display: flex; justify-content: space-between; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; font-size: 12px; gap: 10px; flex-wrap: wrap; }
-    .ticker-group { display: flex; gap: 16px; align-items: center; }
-    .ticker-item { display: flex; align-items: center; gap: 6px; }
+    /* Live Ticker */
+    .ticker-bar { display: flex; justify-content: space-between; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 9px 14px; margin-bottom: 14px; font-size: 12px; gap: 10px; flex-wrap: wrap; }
+    .ticker-group { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+    .ticker-item { display: flex; align-items: center; gap: 5px; }
     .ticker-sym { color: var(--muted); font-weight: 600; }
     .ticker-val { font-weight: 700; color: var(--text); }
-    .chain-pill { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 11px; }
+    .chain-pill { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 11px; font-weight: 600; }
     .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); }
 
     /* Telemetry Strip */
-    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
     .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
     .stat-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
-    .stat-num { font-size: 18px; font-weight: 700; color: var(--gold); }
+    .stat-num { font-size: 19px; font-weight: 800; color: var(--gold); }
     .stat-sub { font-size: 10px; color: var(--green); margin-top: 2px; }
 
-    /* Wallet Banner */
-    .banner { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; font-size: 13px; line-height: 1.5; }
-    .banner.verified { border-color: rgba(14, 203, 129, 0.4); background: rgba(14, 203, 129, 0.06); }
-    .banner.unverified { border-color: rgba(246, 70, 93, 0.4); background: rgba(246, 70, 93, 0.06); }
-    .helper-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-    .mini-btn { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); padding: 6px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; text-decoration: none; }
+    /* Passport & Wallet Status Card */
+    .passport-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; font-size: 13px; line-height: 1.5; }
+    .passport-card.verified { border-color: rgba(14, 203, 129, 0.45); background: linear-gradient(135deg, rgba(14, 203, 129, 0.08), var(--surface)); }
+    .passport-card.unverified { border-color: rgba(246, 70, 93, 0.45); background: linear-gradient(135deg, rgba(246, 70, 93, 0.08), var(--surface)); }
+    .passport-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+    .tier-badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 6px; background: rgba(240,185,11,0.15); color: var(--gold); border: 1px solid rgba(240,185,11,0.3); }
+    .passport-meta { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: var(--muted); margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06); }
+    .helper-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .mini-btn { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); padding: 6px 11px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; text-decoration: none; transition: 0.2s; }
     .mini-btn:hover { border-color: var(--gold); color: var(--gold); }
 
-    /* Owner Studio */
-    .admin-box { background: linear-gradient(180deg, rgba(240, 185, 11, 0.08), var(--surface)); border: 1px solid rgba(240, 185, 11, 0.4); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-    .admin-title { font-size: 13px; font-weight: 700; color: var(--gold); margin-bottom: 10px; display: flex; justify-content: space-between; }
-    .admin-row { display: flex; gap: 8px; }
+    /* Owner Governance Studio */
+    .admin-box { background: linear-gradient(180deg, rgba(240, 185, 11, 0.1), var(--surface)); border: 1px solid rgba(240, 185, 11, 0.45); border-radius: 12px; padding: 15px; margin-bottom: 14px; }
+    .admin-title { font-size: 13px; font-weight: 700; color: var(--gold); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .admin-row { display: flex; gap: 8px; margin-bottom: 8px; }
     .admin-input { flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; border-radius: 8px; font-size: 13px; outline: none; }
     .admin-input:focus { border-color: var(--gold); }
+    .preset-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .preset-chip { background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); font-size: 11px; padding: 4px 9px; border-radius: 99px; cursor: pointer; }
+    .preset-chip:hover { color: var(--gold); border-color: var(--gold); }
 
-    /* Tabs */
-    .tabs { display: flex; gap: 6px; background: var(--surface); padding: 5px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 16px; }
-    .tab { flex: 1; text-align: center; padding: 8px; font-size: 13px; font-weight: 600; color: var(--muted); border-radius: 7px; cursor: pointer; transition: 0.2s; }
+    /* Main Tabs */
+    .tabs { display: flex; gap: 6px; background: var(--surface); padding: 5px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 14px; }
+    .tab { flex: 1; text-align: center; padding: 8px 6px; font-size: 12px; font-weight: 700; color: var(--muted); border-radius: 7px; cursor: pointer; transition: 0.2s; }
     .tab.active { background: var(--surface-2); color: var(--gold); }
 
-    /* Poll Cards */
-    .poll-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 14px; }
-    .poll-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .poll-id { font-size: 11px; font-weight: 700; color: var(--gold); background: var(--surface-2); padding: 3px 9px; border-radius: 6px; }
-    .poll-meta { font-size: 11px; color: var(--muted); }
-    .poll-q { font-size: 17px; font-weight: 600; line-height: 1.4; margin-bottom: 14px; }
+    /* Sub-Filter Pills */
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .f-pill { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; border-radius: 99px; font-size: 11px; font-weight: 600; cursor: pointer; }
+    .f-pill.active { background: rgba(240,185,11,0.14); border-color: var(--gold); color: var(--gold); }
 
-    .ratio-labels { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+    /* Poll Cards */
+    .poll-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .poll-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 8px; flex-wrap: wrap; }
+    .poll-id { font-size: 11px; font-weight: 700; color: var(--gold); background: var(--surface-2); padding: 3px 9px; border-radius: 6px; }
+    .consensus-tag { font-size: 11px; font-weight: 600; color: var(--muted); background: var(--bg); padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border); }
+    .poll-q { font-size: 16px; font-weight: 600; line-height: 1.45; margin-bottom: 14px; color: var(--text); }
+
+    .ratio-labels { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
     .bull-txt { color: var(--green); }
     .bear-txt { color: var(--red); }
     .bar-track { width: 100%; height: 9px; background: var(--red); border-radius: 99px; overflow: hidden; margin-bottom: 14px; }
@@ -84,44 +95,42 @@
 
     .vote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .v-btn { padding: 11px; border: none; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.2s; }
-    .v-bull { background: rgba(14, 203, 129, 0.15); color: var(--green); border: 1px solid rgba(14, 203, 129, 0.4); }
+    .v-bull { background: rgba(14, 203, 129, 0.14); color: var(--green); border: 1px solid rgba(14, 203, 129, 0.4); }
     .v-bull:hover:not(:disabled) { background: var(--green); color: #0b0e11; }
-    .v-bear { background: rgba(246, 70, 93, 0.15); color: var(--red); border: 1px solid rgba(246, 70, 93, 0.4); }
+    .v-bear { background: rgba(246, 70, 93, 0.14); color: var(--red); border: 1px solid rgba(246, 70, 93, 0.4); }
     .v-bear:hover:not(:disabled) { background: var(--red); color: #fff; }
-    .v-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .v-btn:disabled { opacity: 0.38; cursor: not-allowed; }
 
     .voted-bar { display: flex; justify-content: space-between; align-items: center; background: var(--surface-2); padding: 9px 12px; border-radius: 8px; font-size: 12px; margin-top: 10px; gap: 8px; flex-wrap: wrap; }
-    .share-x { background: #1d9bf0; color: #fff; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; text-decoration: none; }
+    .share-x { background: #1d9bf0; color: #fff; border: none; padding: 5px 11px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; text-decoration: none; }
 
     /* Live Feed */
-    .feed-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; font-size: 12px; }
+    .feed-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; font-size: 12px; }
     .feed-left { display: flex; flex-direction: column; gap: 3px; }
     .feed-addr { font-weight: 700; color: var(--text); }
     .feed-topic { color: var(--muted); font-size: 11px; }
-    .feed-badge { padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; }
+    .feed-badge { padding: 4px 9px; border-radius: 6px; font-weight: 700; font-size: 11px; }
     .badge-bull { background: rgba(14, 203, 129, 0.15); color: var(--green); }
     .badge-bear { background: rgba(246, 70, 93, 0.15); color: var(--red); }
 
     /* Info Box */
-    .info-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; font-size: 13px; line-height: 1.6; color: #b7bdc6; }
-    .info-card h3 { color: var(--gold); font-size: 15px; margin: 12px 0 6px; }
+    .info-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; font-size: 13px; line-height: 1.65; color: #b7bdc6; }
+    .info-card h3 { color: var(--gold); font-size: 15px; margin: 14px 0 6px; }
     .info-card h3:first-child { margin-top: 0; }
     .info-card ul { padding-left: 18px; margin-bottom: 10px; }
 
-    .toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--surface-2); border: 1px solid var(--gold); color: var(--text); padding: 10px 16px; border-radius: 8px; font-size: 12px; z-index: 99; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.6); max-width: 92%; text-align: center; }
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--surface-2); border: 1px solid var(--gold); color: var(--text); padding: 10px 16px; border-radius: 8px; font-size: 12px; z-index: 999; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.65); max-width: 92%; text-align: center; }
     .footer { margin-top: 24px; text-align: center; font-size: 11px; color: var(--muted); line-height: 1.6; }
     .footer a { color: var(--gold); text-decoration: none; }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Header -->
+    <!-- Top Header -->
     <div class="topbar">
       <div class="brand">
         <div class="brand-icon">AP</div>
-        <div>
-          <div class="brand-title">AgentPulse <span class="brand-sub">.ai Gated</span></div>
-        </div>
+        <div class="brand-title">AgentPulse <span class="brand-sub">.ai Gated</span></div>
       </div>
       <button id="connectBtn" class="connect-btn" onclick="connectWallet()">Connect Wallet</button>
     </div>
@@ -129,53 +138,62 @@
     <!-- Live Market Ticker -->
     <div class="ticker-bar">
       <div class="ticker-group">
-        <div class="ticker-item"><span class="ticker-sym">BTC</span><span id="btcPrice" class="ticker-val">Loading...</span></div>
-        <div class="ticker-item"><span class="ticker-sym">BNB</span><span id="bnbPrice" class="ticker-val">Loading...</span></div>
+        <div class="ticker-item"><span class="ticker-sym">BTC</span><span id="btcPrice" class="ticker-val">$--</span></div>
+        <div class="ticker-item"><span class="ticker-sym">BNB</span><span id="bnbPrice" class="ticker-val">$--</span></div>
       </div>
       <div class="chain-pill"><span class="dot"></span> BNB Smart Chain</div>
     </div>
 
-    <!-- Telemetry -->
+    <!-- On-Chain Telemetry -->
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">Verified .ai Voters</div>
-        <div id="uniqueCount" class="stat-num">-</div>
+        <div id="uniqueCount" class="stat-num">0</div>
         <div class="stat-sub">100% Sybil-Filtered</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Active Polls</div>
-        <div id="pollCount" class="stat-num">-</div>
+        <div class="stat-label">Active Markets</div>
+        <div id="pollCount" class="stat-num">0</div>
         <div class="stat-sub">On-Chain Immutable</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Total Signals Cast</div>
-        <div id="totalSignals" class="stat-num">-</div>
+        <div class="stat-label">Total Signals</div>
+        <div id="totalSignals" class="stat-num">0</div>
         <div class="stat-sub">Zero Custody</div>
       </div>
     </div>
 
-    <!-- Dynamic Wallet Status Banner -->
-    <div id="walletBanner" class="banner">
-      <strong>Agent ID Verification Required:</strong> Connect the wallet holding your non-transferable <code>.ai</code> Agent ID to cast verifiable market signals.
+    <!-- Agent ID Passport / Wallet Banner -->
+    <div id="walletBanner" class="passport-card">
+      <div class="passport-top">
+        <strong>Agent ID Passport Verification</strong>
+        <span class="tier-badge">ERC-721 Gated</span>
+      </div>
+      <div>Connect the wallet holding your non-transferable <code>.ai</code> Agent ID to unlock on-chain sentiment voting and conviction scoring.</div>
       <div class="helper-actions">
-        <button class="mini-btn" onclick="copyDappUrl()">Copy Link for Wallet Browser</button>
-        <a class="mini-btn" href="https://bscscan.com/address/0x0eB425B03D848BdC7Dc5029099a2d187678cdF94#code" target="_blank">Verified Contract</a>
+        <button class="mini-btn" onclick="copyDappUrl()">Copy Link for Discover Browser</button>
+        <a class="mini-btn" href="https://bscscan.com/address/0x0eB425B03D848BdC7Dc5029099a2d187678cdF94#code" target="_blank">Verified Contract ↗</a>
       </div>
     </div>
 
-    <!-- Owner Governance Studio (Visible ONLY to Contract Owner) -->
+    <!-- Owner Governance Studio (Auto-Unlocks ONLY for Contract Owner) -->
     <div id="ownerStudio" class="admin-box" style="display:none;">
       <div class="admin-title">
         <span>Owner Governance Studio</span>
-        <span>Admin Verified</span>
+        <span class="tier-badge">Admin Unlocked</span>
       </div>
       <div class="admin-row">
-        <input id="newQuestionInput" class="admin-input" type="text" placeholder="e.g., Will AI Agent tokens outperform DeFi in Q1 2027?" />
-        <button class="connect-btn" onclick="createNewPoll()">Publish Poll</button>
+        <input id="newQuestionInput" class="admin-input" type="text" placeholder="Enter new market sentiment question..." />
+        <button class="connect-btn" onclick="createNewPoll()">Publish</button>
+      </div>
+      <div class="preset-row">
+        <span class="preset-chip" onclick="usePreset('Will BNB Chain AI Agents surpass DeFi daily active users in 2027?')">+ AI vs DeFi Preset</span>
+        <span class="preset-chip" onclick="usePreset('BTC Dominance by End of Q1 2027: Bullish (>55%) or Bearish (<55%)?')">+ BTC Dominance Preset</span>
+        <span class="preset-chip" onclick="usePreset('Will Tokenized Equities (bStocks) see 3x volume growth in 2027?')">+ bStocks Growth Preset</span>
       </div>
     </div>
 
-    <!-- Navigation Tabs -->
+    <!-- Main Navigation Tabs -->
     <div class="tabs">
       <div id="tab-polls" class="tab active" onclick="switchTab('polls')">Sentiment Markets</div>
       <div id="tab-feed" class="tab" onclick="switchTab('feed')">Live Signal Feed</div>
@@ -184,39 +202,44 @@
 
     <!-- View 1: Polls -->
     <div id="view-polls">
-      <div id="pollsContainer" class="poll-card" style="text-align:center; color:var(--muted);">Loading on-chain sentiment markets...</div>
+      <div class="filter-bar">
+        <button id="flt-all" class="f-pill active" onclick="setFilter('all')">All Markets</button>
+        <button id="flt-unvoted" class="f-pill" onclick="setFilter('unvoted')">Actionable (Unvoted)</button>
+        <button id="flt-voted" class="f-pill" onclick="setFilter('voted')">My Voted Signals</button>
+      </div>
+      <div id="pollsContainer" class="poll-card" style="text-align:center; color:var(--muted);">Syncing BNB Smart Chain state...</div>
     </div>
 
-    <!-- View 2: Live On-Chain Feed -->
+    <!-- View 2: Live Signal Feed -->
     <div id="view-feed" style="display:none;">
-      <div id="feedContainer" class="poll-card" style="text-align:center; color:var(--muted);">Loading recent on-chain signals...</div>
+      <div id="feedContainer" class="poll-card" style="text-align:center; color:var(--muted);">Scanning recent blocks...</div>
     </div>
 
     <!-- View 3: Architecture & Safety -->
     <div id="view-about" style="display:none;">
       <div class="info-card">
-        <h3>Why AgentPulse Exists</h3>
-        <p>Traditional on-chain polls fail because Sybil farms can spin up hundreds of empty wallets at near-zero cost. AgentPulse solves this by enforcing hardware/account-bound identity gating directly at the smart contract level.</p>
+        <h3>Why AgentPulse Solves Crowd Sentiment</h3>
+        <p>Standard Web3 polls are distorted by Sybil farms spinning up hundreds of burner wallets at near-zero cost. AgentPulse enforces one-identity-one-vote governance directly on-chain using non-transferable <code>.ai</code> Agent IDs.</p>
 
-        <h3>On-Chain Agent ID Integration</h3>
+        <h3>On-Chain Agent ID Verification</h3>
         <ul>
           <li>Queries the official SPACE ID Agent ID ERC-721 contract (<code>0x60b9262456de011f7d15a54cdd8c48baaa8b022f</code>) via <code>balanceOf(msg.sender) &gt; 0</code>.</li>
-          <li>Each verified <code>.ai</code> Agent ID holder can cast exactly one immutable vote per market topic.</li>
-          <li>All tallies and unique voter metrics are computed transparently on BNB Smart Chain.</li>
+          <li>Each verified <code>.ai</code> Agent ID holder can cast one immutable vote per market topic.</li>
+          <li>All tallies, conviction ratios, and unique voter counts are stored transparently on BNB Smart Chain.</li>
         </ul>
 
-        <h3>Security & Non-Custodial Guarantee</h3>
+        <h3>Strict Non-Custodial & Red-Line Compliance</h3>
         <ul>
-          <li><strong>Zero Custody:</strong> The contract never holds user funds, tokens, or approvals.</li>
-          <li><strong>No Off-Chain Tracking:</strong> Zero QR pairing codes, zero server sessions, and zero wallet lookup tools.</li>
-          <li><strong>Open-Source:</strong> Fully verified on BscScan and publicly auditable on GitHub.</li>
+          <li><strong>Zero Custody:</strong> Holds zero user funds, tokens, or ERC-20 approvals.</li>
+          <li><strong>Privacy Preserved:</strong> Zero QR login codes, zero server sessions, and zero wallet-lookup features.</li>
+          <li><strong>Open-Source:</strong> Verified on BscScan and auditable on GitHub.</li>
         </ul>
       </div>
     </div>
 
     <div class="footer">
       Built by <strong>ahcharlie.ai</strong> • <a href="https://github.com/ahcharlie2/agentpulse-dapp" target="_blank">GitHub Open-Source</a> • <a href="https://bscscan.com/address/0x0eB425B03D848BdC7Dc5029099a2d187678cdF94" target="_blank">BscScan</a><br/>
-      Informational crowd sentiment only—not financial advice. Zero funds held.
+      Informational crowd sentiment only—not financial advice. Zero user funds held.
     </div>
   </div>
 
@@ -224,40 +247,200 @@
 
   <script>
     const CONTRACT_ADDRESS = "0x0eB425B03D848BdC7Dc5029099a2d187678cdF94";
-    const BSC_RPC = "https://bsc-dataseed.binance.org/";
     const DAPP_URL = "https://ahcharlie2.github.io/agentpulse-dapp/";
-
-    const ABI = [
-      "function owner() view returns (address)",
-      "function topicCount() view returns (uint256)",
-      "function uniqueAgentVoters() view returns (uint256)",
-      "function checkAgentID(address _user) view returns (bool)",
-      "function hasVoted(uint256, address) view returns (bool)",
-      "function getTopic(uint256 _topicId) view returns (string question, uint256 bullishVotes, uint256 bearishVotes, uint256 createdAt, bool active)",
-      "function castSignal(uint256 _topicId, bool _isBullish)",
-      "function createTopic(string calldata _question)",
-      "event SignalCast(uint256 indexed topicId, address indexed voter, bool isBullish)"
+    const BSC_RPCS = [
+      "https://bsc-dataseed.binance.org/",
+      "https://bsc-dataseed1.defibit.io/",
+      "https://bsc-dataseed1.ninicoin.io/",
+      "https://bsc.publicnode.com"
     ];
 
-    let signer = null;
+    /* =========================================================
+       ZERO-DEPENDENCY KECCAK-256 & EVM ABI ENGINE
+       ========================================================= */
+    const KECCAK_RC = [
+      0x0000000000000001n, 0x0000000000008082n, 0x800000000000808an, 0x8000000080008000n,
+      0x000000000000808bn, 0x0000000080000001n, 0x8000000080008081n, 0x8000000000008009n,
+      0x000000000000008an, 0x0000000000000088n, 0x0000000080008009n, 0x000000008000000an,
+      0x000000008000808bn, 0x800000000000008bn, 0x8000000000008089n, 0x8000000000008003n,
+      0x8000000000008002n, 0x8000000000000080n, 0x000000000000800an, 0x800000008000000an,
+      0x8000000080008081n, 0x8000000000008080n, 0x0000000080000001n, 0x8000000080008008n
+    ];
+
+    function rotl64(x, y) {
+      if (y === 0) return x;
+      return ((x << BigInt(y)) | (x >> BigInt(64 - y))) & 0xffffffffffffffffn;
+    }
+
+    function keccakF(st) {
+      const C = new Array(5);
+      const D = new Array(5);
+      const T = new Array(5);
+      for (let round = 0; round < 24; round++) {
+        for (let x = 0; x < 5; x++) {
+          C[x] = st[x] ^ st[x + 5] ^ st[x + 10] ^ st[x + 15] ^ st[x + 20];
+        }
+        for (let x = 0; x < 5; x++) {
+          D[x] = C[(x + 4) % 5] ^ rotl64(C[(x + 1) % 5], 1);
+        }
+        for (let x = 0; x < 5; x++) {
+          for (let y = 0; y < 5; y++) st[x + 5 * y] ^= D[x];
+        }
+        let x = 1, y = 0, current = st[1];
+        for (let t = 0; t < 24; t++) {
+          const r = ((t + 1) * (t + 2) / 2) % 64;
+          const nx = y, ny = (2 * x + 3 * y) % 5;
+          const tmp = st[nx + 5 * ny];
+          st[nx + 5 * ny] = rotl64(current, r);
+          current = tmp;
+          x = nx; y = ny;
+        }
+        for (let y2 = 0; y2 < 5; y2++) {
+          for (let x2 = 0; x2 < 5; x2++) T[x2] = st[x2 + 5 * y2];
+          for (let x2 = 0; x2 < 5; x2++) {
+            st[x2 + 5 * y2] = T[x2] ^ ((~T[(x2 + 1) % 5]) & T[(x2 + 2) % 5]);
+          }
+        }
+        st[0] ^= KECCAK_RC[round];
+      }
+    }
+
+    function keccak256(text) {
+      const input = new TextEncoder().encode(text);
+      const rate = 136;
+      const totalLen = Math.ceil((input.length + 1) / rate) * rate;
+      const padded = new Uint8Array(totalLen);
+      padded.set(input);
+      padded[input.length] = 0x01;
+      padded[totalLen - 1] |= 0x80;
+
+      const st = new Array(25).fill(0n);
+      for (let off = 0; off < totalLen; off += rate) {
+        for (let i = 0; i < 17; i++) {
+          let lane = 0n;
+          for (let b = 0; b < 8; b++) {
+            lane |= BigInt(padded[off + i * 8 + b]) << BigInt(8 * b);
+          }
+          st[i] ^= lane;
+        }
+        keccakF(st);
+      }
+
+      let out = "";
+      for (let i = 0; i < 4; i++) {
+        let lane = st[i];
+        for (let b = 0; b < 8; b++) {
+          out += Number((lane >> BigInt(8 * b)) & 0xffn).toString(16).padStart(2, "0");
+        }
+      }
+      return out;
+    }
+
+    const SEL = {
+      owner: keccak256("owner()").slice(0, 8),
+      topicCount: keccak256("topicCount()").slice(0, 8),
+      uniqueAgentVoters: keccak256("uniqueAgentVoters()").slice(0, 8),
+      checkAgentID: keccak256("checkAgentID(address)").slice(0, 8),
+      hasVoted: keccak256("hasVoted(uint256,address)").slice(0, 8),
+      getTopic: keccak256("getTopic(uint256)").slice(0, 8),
+      castSignal: keccak256("castSignal(uint256,bool)").slice(0, 8),
+      createTopic: keccak256("createTopic(string)").slice(0, 8),
+      signalCastTopic: "0x" + keccak256("SignalCast(uint256,address,bool)")
+    };
+
+    const padUint = (n) => BigInt(n).toString(16).padStart(64, "0");
+    const padAddr = (a) => a.toLowerCase().replace(/^0x/, "").padStart(64, "0");
+    const padBool = (b) => (b ? "1" : "0").padStart(64, "0");
+
+    function encodeStringArg(str) {
+      const bytes = new TextEncoder().encode(str);
+      let hex = "";
+      for (let b of bytes) hex += b.toString(16).padStart(2, "0");
+      const paddedLen = Math.ceil(hex.length / 64) * 64 || 64;
+      return padUint(32) + padUint(bytes.length) + hex.padEnd(paddedLen, "0");
+    }
+
+    function decodeGetTopic(hexResult) {
+      const clean = hexResult.replace(/^0x/, "");
+      const strOffsetChars = Number(BigInt("0x" + clean.slice(0, 64))) * 2;
+      const bull = Number(BigInt("0x" + clean.slice(64, 128)));
+      const bear = Number(BigInt("0x" + clean.slice(128, 192)));
+      const createdAt = Number(BigInt("0x" + clean.slice(192, 256)));
+      const active = BigInt("0x" + clean.slice(256, 320)) > 0n;
+
+      const strLenBytes = Number(BigInt("0x" + clean.slice(strOffsetChars, strOffsetChars + 64)));
+      const strHex = clean.slice(strOffsetChars + 64, strOffsetChars + 64 + strLenBytes * 2);
+      const bytes = new Uint8Array(strLenBytes);
+      for (let i = 0; i < strLenBytes; i++) {
+        bytes[i] = parseInt(strHex.slice(i * 2, i * 2 + 2), 16);
+      }
+      const question = new TextDecoder().decode(bytes);
+      return { question, bull, bear, createdAt, active };
+    }
+
+    async function rpcRequest(method, params) {
+      for (const url of BSC_RPCS) {
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 5000);
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+            signal: controller.signal
+          });
+          clearTimeout(timer);
+          const json = await res.json();
+          if (json && json.result !== undefined) return json.result;
+        } catch (e) { /* Try next fallback RPC */ }
+      }
+      throw new Error("All BSC RPC endpoints timed out");
+    }
+
+    const ethCall = (data) => rpcRequest("eth_call", [{ to: CONTRACT_ADDRESS, data: "0x" + data }, "latest"]);
+
+    /* =========================================================
+       APPLICATION STATE & UI LOGIC
+       ========================================================= */
     let userAddress = null;
     let hasAgentID = false;
     let topicsCache = [];
+    let votedMap = {};
+    let currentFilter = "all";
+    let discoveredProvider = null;
+
+    window.addEventListener("eip6963:announceProvider", (event) => {
+      if (event.detail && event.detail.provider) {
+        discoveredProvider = event.detail.provider;
+      }
+    });
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
+
+    function getProvider() {
+      if (window.ethereum) return window.ethereum;
+      if (window.binancew3w && window.binancew3w.ethereum) return window.binancew3w.ethereum;
+      if (discoveredProvider) return discoveredProvider;
+      return null;
+    }
 
     function showToast(msg) {
       const t = document.getElementById("toast");
       t.innerText = msg;
       t.style.display = "block";
-      setTimeout(() => { t.style.display = "none"; }, 4000);
+      setTimeout(() => { t.style.display = "none"; }, 4200);
     }
 
     function copyDappUrl() {
       if (navigator.clipboard) {
         navigator.clipboard.writeText(DAPP_URL);
-        showToast("Link copied! Paste it inside Binance Wallet Discover browser.");
+        showToast("Link copied! Open Binance App > Wallet > Discover and paste.");
       } else {
         showToast(DAPP_URL);
       }
+    }
+
+    function usePreset(text) {
+      document.getElementById("newQuestionInput").value = text;
     }
 
     function switchTab(tabName) {
@@ -268,9 +451,17 @@
       if (tabName === "feed") loadSignalFeed();
     }
 
+    function setFilter(flt) {
+      currentFilter = flt;
+      ["all", "unvoted", "voted"].forEach(f => {
+        document.getElementById("flt-" + f).classList.toggle("active", f === flt);
+      });
+      renderPolls();
+    }
+
     async function loadMarketPrices() {
       try {
-        const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=%5B%22BTCUSDT%22,%22BNBUSDT%22%5D');
+        const res = await fetch("https://api.binance.com/api/v3/ticker/24hr?symbols=%5B%22BTCUSDT%22,%22BNBUSDT%22%5D");
         const data = await res.json();
         data.forEach(item => {
           const price = parseFloat(item.lastPrice).toLocaleString(undefined, { maximumFractionDigits: 2 });
@@ -282,59 +473,309 @@
           if (item.symbol === "BNBUSDT") document.getElementById("bnbPrice").innerHTML = html;
         });
       } catch (e) {
-        document.getElementById("btcPrice").innerText = "Live";
-        document.getElementById("bnbPrice").innerText = "Live";
+        try {
+          const cg = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,binancecoin&vs_currencies=usd");
+          const d = await cg.json();
+          if (d.bitcoin) document.getElementById("btcPrice").innerText = "$" + d.bitcoin.usd.toLocaleString();
+          if (d.binancecoin) document.getElementById("bnbPrice").innerText = "$" + d.binancecoin.usd.toLocaleString();
+        } catch (err) {
+          document.getElementById("btcPrice").innerText = "Live";
+          document.getElementById("bnbPrice").innerText = "Live";
+        }
       }
     }
 
     async function loadOnChainData() {
       try {
-        const provider = new ethers.JsonRpcProvider(BSC_RPC);
-        const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
-
-        const [countBN, uniqueBN] = await Promise.all([
-          contract.topicCount(),
-          contract.uniqueAgentVoters()
+        const [countHex, uniqueHex] = await Promise.all([
+          ethCall(SEL.topicCount),
+          ethCall(SEL.uniqueAgentVoters)
         ]);
 
-        const count = Number(countBN);
-        document.getElementById("pollCount").innerText = count.toString();
-        document.getElementById("uniqueCount").innerText = uniqueBN.toString();
+        const count = Number(BigInt(countHex));
+        const unique = Number(BigInt(uniqueHex));
 
-        const topicPromises = [];
+        document.getElementById("pollCount").innerText = count.toString();
+        document.getElementById("uniqueCount").innerText = unique.toString();
+
+        const promises = [];
         for (let i = count; i >= 1; i--) {
-          topicPromises.push(contract.getTopic(i).then(res => ({ id: i, data: res })));
+          promises.push(
+            ethCall(SEL.getTopic + padUint(i)).then(hex => ({ id: i, ...decodeGetTopic(hex) }))
+          );
         }
 
-        const results = await Promise.all(topicPromises);
-        topicsCache = results;
+        topicsCache = await Promise.all(promises);
 
-        let totalVotesAll = 0;
-        results.forEach(r => {
-          totalVotesAll += Number(r.data[1]) + Number(r.data[2]);
-        });
-        document.getElementById("totalSignals").innerText = totalVotesAll.toString();
+        let totalSignals = 0;
+        topicsCache.forEach(t => { totalSignals += (t.bull + t.bear); });
+        document.getElementById("totalSignals").innerText = totalSignals.toString();
 
-        await renderPolls();
+        if (userAddress) {
+          await refreshUserStates();
+        } else {
+          renderPolls();
+        }
       } catch (err) {
-        console.error(err);
-        document.getElementById("pollsContainer").innerText = "Unable to reach BNB Chain RPC. Please refresh.";
+        document.getElementById("pollsContainer").innerHTML = `RPC busy. <button class="mini-btn" onclick="loadOnChainData()">Retry Sync</button>`;
       }
     }
 
-    async function renderPolls() {
+    async function refreshUserStates() {
+      if (!userAddress) return;
+      const banner = document.getElementById("walletBanner");
+
+      const [idHex, ownerHex, ...voteHexes] = await Promise.all([
+        ethCall(SEL.checkAgentID + padAddr(userAddress)),
+        ethCall(SEL.owner),
+        ...topicsCache.map(t => ethCall(SEL.hasVoted + padUint(t.id) + padAddr(userAddress)))
+      ]);
+
+      hasAgentID = BigInt(idHex) > 0n;
+      const contractOwner = "0x" + ownerHex.slice(-40);
+
+      votedMap = {};
+      let myVoteCount = 0;
+      topicsCache.forEach((t, idx) => {
+        const v = BigInt(voteHexes[idx]) > 0n;
+        votedMap[t.id] = v;
+        if (v) myVoteCount++;
+      });
+
+      if (userAddress.toLowerCase() === contractOwner.toLowerCase()) {
+        document.getElementById("ownerStudio").style.display = "block";
+      }
+
+      const shortAddr = userAddress.slice(0, 6) + "..." + userAddress.slice(-4);
+      if (hasAgentID) {
+        let tier = "Verified .ai Starter";
+        if (myVoteCount >= 3) tier = "Senior Signal Analyst";
+        else if (myVoteCount >= 1) tier = "Active .ai Contributor";
+
+        banner.className = "passport-card verified";
+        banner.innerHTML = `
+          <div class="passport-top">
+            <strong style="color:var(--green);">✓ Verified .ai Agent ID Passport (${shortAddr})</strong>
+            <span class="tier-badge">${tier}</span>
+          </div>
+          <div>On-chain <code>ERC-721</code> identity confirmed. Your signals carry <strong>1x Sybil-filtered weight</strong>.</div>
+          <div class="passport-meta">
+            <span>Signals Cast: <strong style="color:var(--text);">${myVoteCount}/${topicsCache.length}</strong></span>
+            <span>Custody Risk: <strong style="color:var(--green);">Zero</strong></span>
+          </div>
+        `;
+      } else {
+        banner.className = "passport-card unverified";
+        banner.innerHTML = `
+          <div class="passport-top">
+            <strong style="color:var(--red);">No .ai Agent ID in ${shortAddr}</strong>
+            <span class="tier-badge" style="color:var(--red); border-color:rgba(246,70,93,0.4);">Unverified</span>
+          </div>
+          <div>This address does not hold a <code>.ai</code> Agent ID. Inside Binance Wallet, tap top-left wallet selector and switch to your <strong>Agentic Wallet</strong> holding your <code>.ai</code> name.</div>
+          <div class="helper-actions">
+            <button class="mini-btn" onclick="connectWallet()">Re-Check Wallet</button>
+          </div>
+        `;
+      }
+
+      renderPolls();
+    }
+
+    function getConsensusLabel(bull, bear) {
+      const total = bull + bear;
+      if (total === 0) return "Awaiting First Signal";
+      const bullPct = Math.round((bull / total) * 100);
+      const conviction = Math.abs(bullPct - 50) * 2;
+      if (bullPct >= 65) return `Bullish Consensus • ${conviction}% Conviction`;
+      if (bullPct <= 35) return `Bearish Consensus • ${conviction}% Conviction`;
+      return `Contested Market • ${conviction}% Conviction`;
+    }
+
+    function renderPolls() {
       const container = document.getElementById("pollsContainer");
-      if (topicsCache.length === 0) {
-        container.innerHTML = "No active polls found.";
+      let list = topicsCache;
+
+      if (currentFilter === "unvoted") {
+        list = topicsCache.filter(t => !votedMap[t.id]);
+      } else if (currentFilter === "voted") {
+        list = topicsCache.filter(t => votedMap[t.id]);
+      }
+
+      if (list.length === 0) {
+        container.innerHTML = `<div class="poll-card" style="text-align:center; color:var(--muted);">No markets match this filter right now.</div>`;
         return;
       }
 
-      const provider = new ethers.JsonRpcProvider(BSC_RPC);
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
+      container.innerHTML = list.map(t => {
+        const total = t.bull + t.bear;
+        const barWidth = total > 0 ? Math.round((t.bull / total) * 100) : 50;
+        const bullPct = total > 0 ? barWidth : 0;
+        const bearPct = total > 0 ? 100 - barWidth : 0;
+        const isVoted = votedMap[t.id] === true;
+        const canVote = userAddress && hasAgentID && t.active && !isVoted;
+        const consensus = getConsensusLabel(t.bull, t.bear);
 
-      let votedMap = {};
-      if (userAddress) {
-        const checks = await Promise.all(
-          topicsCache.map(t => contract.hasVoted(t.id, userAddress).then(v => ({ id: t.id, voted: v })))
-        );
-        checks.forEach(c =>
+        const tweetText = encodeURIComponent(`just cast my verified .ai on-chain signal on "${t.question}" via AgentPulse.\n\nsybil-proof market sentiment on bnb chain:\n${DAPP_URL}\n\n#BinanceWalletHackathon #AgenticWallet`);
+
+        return `
+          <div class="poll-card">
+            <div class="poll-top">
+              <span class="poll-id">MARKET #${t.id} • ${total} Signal${total === 1 ? "" : "s"}</span>
+              <span class="consensus-tag">${consensus}</span>
+            </div>
+            <div class="poll-q">${t.question}</div>
+
+            <div class="ratio-labels">
+              <span class="bull-txt">Bullish: ${t.bull} (${bullPct}%)</span>
+              <span class="bear-txt">Bearish: ${t.bear} (${bearPct}%)</span>
+            </div>
+            <div class="bar-track"><div class="bar-bull" style="width:${barWidth}%"></div></div>
+
+            <div class="vote-grid">
+              <button class="v-btn v-bull" onclick="castVote(${t.id}, true)" ${canVote ? "" : "disabled"}>Vote Bullish</button>
+              <button class="v-btn v-bear" onclick="castVote(${t.id}, false)" ${canVote ? "" : "disabled"}>Vote Bearish</button>
+            </div>
+
+            ${isVoted ? `
+              <div class="voted-bar">
+                <span style="color:var(--green); font-weight:700;">✓ Immutable Signal Recorded</span>
+                <a class="share-x" href="https://x.com/intent/tweet?text=${tweetText}" target="_blank">Share Signal on X ↗</a>
+              </div>
+            ` : ""}
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function loadSignalFeed() {
+      const feedBox = document.getElementById("feedContainer");
+      feedBox.innerHTML = `<div class="poll-card" style="text-align:center; color:var(--muted);">Querying BNB Smart Chain event logs...</div>`;
+      try {
+        const latestHex = await rpcRequest("eth_blockNumber", []);
+        const latest = Number(BigInt(latestHex));
+        const fromBlock = "0x" + Math.max(0, latest - 4500).toString(16);
+
+        const logs = await rpcRequest("eth_getLogs", [{
+          address: CONTRACT_ADDRESS,
+          fromBlock,
+          toBlock: "latest",
+          topics: [SEL.signalCastTopic]
+        }]);
+
+        if (!logs || logs.length === 0) {
+          feedBox.innerHTML = `<div class="poll-card" style="text-align:center; color:var(--muted);">No signals in the last ~4,500 blocks. Cast your vote to appear here!</div>`;
+          return;
+        }
+
+        const recent = logs.slice(-25).reverse();
+        feedBox.innerHTML = recent.map(log => {
+          const topicId = Number(BigInt(log.topics[1]));
+          const voter = "0x" + log.topics[2].slice(-40);
+          const isBull = BigInt(log.data) > 0n;
+          const shortAddr = voter.slice(0, 6) + "..." + voter.slice(-4);
+          return `
+            <div class="feed-item">
+              <div class="feed-left">
+                <span class="feed-addr">${shortAddr} <span style="color:var(--gold); font-size:10px;">[.ai Verified]</span></span>
+                <span class="feed-topic">Market #${topicId} • <a href="https://bscscan.com/tx/${log.transactionHash}" target="_blank" style="color:var(--muted);">BscScan Tx ↗</a></span>
+              </div>
+              <span class="feed-badge ${isBull ? "badge-bull" : "badge-bear"}">${isBull ? "BULLISH" : "BEARISH"}</span>
+            </div>
+          `;
+        }).join("");
+      } catch (e) {
+        feedBox.innerHTML = `<div class="poll-card" style="text-align:center; color:var(--muted);">View all live events on <a href="https://bscscan.com/address/${CONTRACT_ADDRESS}#events" target="_blank" style="color:var(--gold);">BscScan Events ↗</a></div>`;
+      }
+    }
+
+    async function connectWallet(silent = false) {
+      const eth = getProvider();
+      if (!eth) {
+        if (!silent) showToast("Open this URL inside Binance Wallet Discover browser to connect.");
+        return;
+      }
+
+      try {
+        const accounts = await eth.request({ method: silent ? "eth_accounts" : "eth_requestAccounts" });
+        if (!accounts || accounts.length === 0) return;
+
+        userAddress = accounts[0];
+        const btn = document.getElementById("connectBtn");
+        btn.innerText = userAddress.slice(0, 6) + "..." + userAddress.slice(-4);
+        btn.classList.add("connected");
+
+        const chainId = await eth.request({ method: "eth_chainId" });
+        if (chainId !== "0x38" && parseInt(chainId, 16) !== 56) {
+          try {
+            await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x38" }] });
+          } catch (swErr) {
+            if (!silent) showToast("Please switch network to BNB Smart Chain (56).");
+          }
+        }
+
+        await refreshUserStates();
+      } catch (err) {
+        if (!silent) showToast("Connection canceled or failed.");
+      }
+    }
+
+    async function castVote(topicId, isBullish) {
+      const eth = getProvider();
+      if (!eth || !userAddress) return;
+      showToast("Confirm signal transaction in your wallet...");
+      try {
+        const calldata = "0x" + SEL.castSignal + padUint(topicId) + padBool(isBullish);
+        const txHash = await eth.request({
+          method: "eth_sendTransaction",
+          params: [{ from: userAddress, to: CONTRACT_ADDRESS, data: calldata }]
+        });
+        showToast("Signal submitted! Confirming on BNB Chain...");
+        await waitForReceipt(txHash);
+        showToast("On-chain signal confirmed!");
+        await loadOnChainData();
+      } catch (err) {
+        showToast("Transaction failed: " + (err.message || "Rejected"));
+      }
+    }
+
+    async function createNewPoll() {
+      const eth = getProvider();
+      if (!eth || !userAddress) return;
+      const input = document.getElementById("newQuestionInput");
+      const q = input.value.trim();
+      if (!q) {
+        showToast("Enter or select a market question first.");
+        return;
+      }
+      try {
+        showToast("Confirm new poll transaction in wallet...");
+        const calldata = "0x" + SEL.createTopic + encodeStringArg(q);
+        const txHash = await eth.request({
+          method: "eth_sendTransaction",
+          params: [{ from: userAddress, to: CONTRACT_ADDRESS, data: calldata }]
+        });
+        showToast("Publishing poll to BNB Chain...");
+        await waitForReceipt(txHash);
+        input.value = "";
+        showToast("New market poll live on-chain!");
+        await loadOnChainData();
+      } catch (err) {
+        showToast("Failed: " + (err.message || "Rejected"));
+      }
+    }
+
+    async function waitForReceipt(txHash) {
+      for (let i = 0; i < 25; i++) {
+        await new Promise(r => setTimeout(r, 2000));
+        const receipt = await rpcRequest("eth_getTransactionReceipt", [txHash]);
+        if (receipt && receipt.blockNumber) return receipt;
+      }
+    }
+
+    // Boot Sequence
+    loadMarketPrices();
+    loadOnChainData();
+    setTimeout(() => connectWallet(true), 500);
+  </script>
+</body>
+</html>
