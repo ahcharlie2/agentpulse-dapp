@@ -263,7 +263,13 @@ async function ensureBsc(e){
 
 async function connect(silent){
   const e=prov();
-  if(!e){if(!silent)toast("Open this page in a wallet browser, such as Binance Wallet, to connect.");return}
+  if(!e){
+    if(!silent){
+      $("#status").textContent="No wallet found in this browser. On a phone, open this page inside the wallet app's built-in dApp browser (for example Binance Wallet). On a computer, install a wallet extension (such as Binance Wallet or MetaMask) and reload. You can read every question and result without a wallet, and you can vote from an Agentic Wallet with the copied command.";
+      toast("No wallet found in this browser. See the note at the top.");
+    }
+    return;
+  }
   try{
     const acc=await e.request({method:silent?"eth_accounts":"eth_requestAccounts"});
     if(!acc||!acc.length)return;
