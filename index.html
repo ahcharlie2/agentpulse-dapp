@@ -150,7 +150,7 @@ const short=a=>a.slice(0,6)+"…"+a.slice(-4);
 let me=null,holder=false,players=[],tally=[0,0],dayNow=Math.floor(Date.now()/864e5),found=null,revealed=false;
 addEventListener("eip6963:announceProvider",e=>{found=(e.detail&&e.detail.provider)||found});
 dispatchEvent(new Event("eip6963:requestProvider"));
-const prov=()=>window.ethereum||(window.binancew3w&&window.binancew3w.ethereum)||found;
+const prov=()=>{const e=window.ethereum||(window.binancew3w&&window.binancew3w.ethereum)||found;return e&&Array.isArray(e.providers)&&e.providers.length?(e.providers.find(x=>x.isBinance||x.isBinanceWallet)||e.providers[0]):e};
 function toast(m){const t=$("#toast");t.textContent=m;t.style.display="block";clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display="none",4500)}
 function copy(txt){
   const ok=()=>toast("Copied. Paste it into your agent and check the details.");
@@ -251,4 +251,58 @@ async function ensureBsc(e){
 async function connect(silent){
   const e=prov();
   if(!e){
-    if(!silent){$("#status").textContent="No wallet found in this browser. On a phone, open this page inside the wallet a
+    if(!silent){$("#status").textContent="No wallet found in this browser. On a phone, open this page inside the wallet app's built-in dApp browser (for example Binance Wallet). On a computer, install a wallet extension and reload. You can use the agent prompt without connecting a wallet.";toast("No wallet found in this browser. See the note at the top.")}
+    return;
+  }
+  try{
+    const acc=await e.request({method:silent?"eth_accounts":"eth_requestAccounts"});
+    if(!acc||!acc.length)return;
+    me=acc[0];const b=$("#conn");b.textContent=short(me);b.classList.add("on");
+    await loadChain();
+  }catch(err){
+    if(!silent){
+      $("#status").textContent="Wallet connection failed: "+((err&&err.message)||"unknown error")+". If no wallet pop-up appeared, open this page from Binance App > Wallet > Discover and tap Connect again.";
+      toast("Wallet connection failed. See the note at the top.");
+    }
+  }
+}
+async function send(data){
+  if(send.busy)return toast("Please wait for the current transaction to finish.");
+  send.busy=true;
+  try{return await sendTx(data)}finally{send.busy=false}
+}
+async function sendTx(data){
+  const e=prov();
+  if(!LIVE)return toast("The check-in contract is not connected yet.");
+  if(!e||!me)return toast("Connect your wallet first.");
+  if(!await ensureBsc(e))return toast("Switch your wallet to BNB Smart Chain, then try again.");
+  try{
+    toast("Confirm the transaction in your wallet.");
+    const h=await e.request({method:"eth_sendTransaction",params:[{from:me,to:C,data:"0x"+data}]});
+    toast("Sent. Waiting for confirmation…");
+    for(let i=0;i<30;i++){
+      await new Promise(r=>setTimeout(r,2000));
+      const rc=await rpc("eth_getTransactionReceipt",[h]);
+      if(rc&&rc.blockNumber){toast(rc.status==="0x1"?"Checked in on-chain.":"The transaction failed on-chain.");break}
+    }
+    await loadChain();return true;
+  }catch(err){toast("Not sent: "+(err.message||"rejected"));return false}
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-act],[data-vote],[data-copy],[data-tab]");if(!t)return;
+  if(t.dataset.copy)return copy(t.dataset.copy);
+  if(t.dataset.vote)return send(S.check+pad(t.dataset.vote));
+  if(t.dataset.tab){
+    ["lb","ab"].forEach(k=>{$("#p-"+k).hidden=k!==t.dataset.tab});
+    document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===t));return;
+  }
+  if(t.dataset.act==="connect")return connect(false);
+  if(t.dataset.act==="refresh")return loadChain();
+  if(t.dataset.act==="reveal"){revealed=true;return render()}
+});
+$("#lnkC").href=LIVE?"https://bscscan.com/address/"+C+"#code":"#";
+setInterval(tick,1000);tick();
+render();loadChain();setTimeout(()=>connect(true),400);
+</script>
+</body>
+</html>
