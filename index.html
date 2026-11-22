@@ -62,7 +62,7 @@ h1 mark{background:var(--lime);color:var(--ink);padding:0 .14em;border-radius:10
 .stamp.ok{color:#0E9F6E}.stamp.no{color:#E0245E}
 details{margin-top:14px;font-size:13px}summary{cursor:pointer;font-weight:800;color:var(--accent)}
 .note{color:var(--mute);font-size:13px;margin-top:6px}
-#qs>.note,#feed>.note{color:#DCE4FF}
+#lb>.note{color:#DCE4FF}
 #cal{padding:14px}#cal:empty{display:none}
 .cal{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:8px;margin:8px 0 2px}
 .tile{display:flex;align-items:center;justify-content:center;height:40px;border-radius:12px;border:2px solid var(--ink);background:var(--paper);font-size:13px;font-weight:800}
@@ -85,9 +85,9 @@ footer{margin-top:30px;font-size:12px;color:#DCE4FF}footer a{color:var(--lime)}
   </div>
 
   <svg class="mascot" viewBox="0 0 100 112" aria-hidden="true"><path d="M50 6 90 20v34c0 26-18 44-40 52C28 98 10 80 10 54V20Z" fill="#C8F53C" stroke="#12163A" stroke-width="6" stroke-linejoin="round"/><path d="M50 18 80 29v25c0 19-13 33-30 40-17-7-30-21-30-40V29Z" fill="#fff" stroke="#12163A" stroke-width="3"/><circle cx="38" cy="50" r="6" fill="#12163A"/><circle cx="62" cy="50" r="6" fill="#12163A"/><circle cx="40" cy="48" r="2" fill="#fff"/><circle cx="64" cy="48" r="2" fill="#fff"/><path d="M38 68q12 10 24 0" fill="none" stroke="#12163A" stroke-width="4" stroke-linecap="round"/></svg>
-  <div class="kicker">Daily Safety Drill · Agent ID holders</div>
+  <div class="kicker">Daily check-in · Agent ID holders</div>
   <h1>Teach your agent to <mark>say no.</mark></h1>
-  <p class="lead">One real wallet scenario a day. You and your AI agent decide: sign or reject. Only verified Agent ID holders vote, and every answer is recorded on BNB Smart Chain.</p>
+  <p class="lead">Check in once a day by answering one real wallet scenario: sign or reject. Build your streak and climb the board. Only verified Agent ID holders can check in, and every check-in is recorded on BNB Smart Chain.</p>
   <div class="clock">Next drill in<b id="cd">--:--:--</b>New drill every day at 00:00 UTC</div>
   <div class="steps">
     <div class="step"><b><i>1</i>Read</b>A realistic wallet scenario.</div>
@@ -95,45 +95,35 @@ footer{margin-top:30px;font-size:12px;color:#DCE4FF}footer a{color:var(--lime)}
     <div class="step"><b><i>3</i>Learn</b>See the verdict and why.</div>
   </div>
   <div class="stats">
-    <span><b id="nV">0</b>Agent ID voters</span>
-    <span><b id="nQ">0</b>questions</span>
-    <span><b id="nS">0</b>votes cast</span>
+    <span><b id="nP">0</b>players</span>
+    <span><b id="nT">0</b>today</span>
+    <span><b id="nA">0</b>check-ins</span>
     <button class="btn ghost" style="color:var(--accent);padding:6px 10px;font-size:12px" data-act="refresh">Refresh</button>
   </div>
 
   <div id="status" class="status">Connect a wallet to vote. If your Agent ID is in your Agentic Wallet, open “Vote with your Agentic Wallet” on any question.</div>
 
   <section id="today"></section>
-  <section id="cal"></section>
-
-  <div id="studio" class="studio" hidden>
-    <strong>Publish a question</strong> <span class="note">(contract owner only)</span>
-    <input id="newQ" maxlength="200" placeholder="Start with Will or Should for Yes/No, otherwise it shows Bullish/Bearish">
-    <div class="chips" id="presets"></div>
-    <button class="btn" data-act="publish">Publish on-chain</button> <button class="btn ghost" style="color:var(--accent)" data-act="drills">Publish next 10 drills</button>
-  </div>
 
   <div class="tabs" role="tablist">
-    <button class="tab on" data-tab="qs">Questions</button>
-    <button class="tab" data-tab="fd">Recent votes</button>
+    <button class="tab on" data-tab="lb">Leaderboard</button>
     <button class="tab" data-tab="ab">How it works</button>
   </div>
-
-  <section id="p-qs"><div id="qs"></div></section>
-  <section id="p-fd" hidden><div id="feed"></div></section>
+  <section id="p-lb"><div id="lb"></div></section>
   <section id="p-ab" hidden class="about">
-    <h2>How voting works</h2>
+    <h2>How it works</h2>
     <ul>
-      <li>The contract checks your wallet holds an Agent ID (<code>balanceOf</code> on the Agent ID contract) before it accepts a vote.</li>
-      <li>One vote per Agent ID per question. Votes are public and cannot be changed.</li>
-      <li>Agent IDs are non-transferable and one per user, so voting power is hard to multiply. This is sybil-resistant, not sybil-proof: it relies on how Agent IDs are issued.</li>
+      <li>Once per UTC day, an Agent ID holder checks in by answering the day's scenario: Sign or Reject.</li>
+      <li>The contract checks the wallet holds an Agent ID. Miss a day and your streak restarts at 1.</li>
+      <li>The board ranks players by total days checked in, then best streak. It shows wallet addresses only.</li>
+      <li>Agent IDs are non-transferable and one per user, which makes it sybil-resistant, not sybil-proof.</li>
     </ul>
-    <h2>Owner permissions</h2>
-    <p>The owner can only publish new questions. The owner cannot edit or remove votes, pause voting, move funds or change any rule. The contract holds no funds, takes no BNB, has no fees and mints nothing.</p>
-    <h2>Voting from an Agentic Wallet</h2>
-    <p>The copied command only calls <code>castSignal</code> with 0 BNB. It asks for no token approval. Your wallet shows the details and you confirm them. Auto Sign lets an agent send transactions without asking each time, so keep limits low and a small balance.</p>
+    <h2>Permissions</h2>
+    <p>The contract has no owner and no admin function. It holds no funds, takes no BNB, charges no fees and cannot be paused or changed. You pay only network gas.</p>
+    <h2>Agent Mode</h2>
+    <p>The copied prompt makes your agent decide first, explain, then ask for your confirmation. It never signs on its own or on a schedule.</p>
     <h2>Risk notice</h2>
-    <p>Community opinion only, not financial advice. Crypto prices are volatile and you can lose money. Never share a seed phrase or private key; this site never asks for one.</p>
+    <p>Education and community only, not financial advice. Crypto is volatile and you can lose money. Never share a seed phrase or private key; this site never asks for one.</p>
     <h2>Links</h2>
     <p><a target="_blank" rel="noopener" id="lnkC">Contract on BscScan</a> · <a target="_blank" rel="noopener" href="https://github.com/ahcharlie2/agentpulse-dapp">Source on GitHub</a></p>
   </section>
@@ -144,41 +134,30 @@ footer{margin-top:30px;font-size:12px;color:#DCE4FF}footer a{color:var(--lime)}
 
 <script src="lessons.js"></script>
 <script>
-const C="0x0eB425B03D848BdC7Dc5029099a2d187678cdF94";
+/* After you deploy AgentPulseDaily, paste its address here: */
+const C="PASTE_NEW_CONTRACT_ADDRESS";
+const AID="0x60b9262456de011f7d15a54cdd8c48baaa8b022f";
 const SITE="https://ahcharlie2.github.io/agentpulse-dapp/";
-const S={owner:"8da5cb5b",count:"f315f553",uniq:"baa94cf5",agent:"89a66c21",voted:"43859632",topic:"71658896",cast:"d707e32c",create:"7b84a88e",
-  evt:"0xe4214ef8978ca76e86ff70a594b141b3c562c8af8078111bc9b9c5fbe32b4664"};
+const S={check:"fad386db",today:"b74e452b",len:"7e20088d",page:"ebb9e69c",sign:"84405183",rej:"1ac48901"};
 const RPCS=["https://bsc.publicnode.com","https://bsc-dataseed.binance.org/","https://bsc-dataseed1.defibit.io/","https://1rpc.io/bnb"];
-const PRESETS=[
- "Will most crypto users let an AI agent sign transactions for them by the end of 2027?",
- "Should AI agents be allowed to send funds without a confirmation for every transaction?",
- "Should wallets give AI agents a spending limit by default?",
- "Will an on-chain identity like Agent ID become standard for AI agents on BNB Chain in 2027?",
- "Will AI agents pay for everyday online services on their own by the end of 2027?"
-];
+const LIVE=/^0x[0-9a-fA-F]{40}$/.test(C);
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const pad=n=>BigInt(n).toString(16).padStart(64,"0");
 const padA=a=>a.toLowerCase().replace("0x","").padStart(64,"0");
 const short=a=>a.slice(0,6)+"…"+a.slice(-4);
-const isYN=q=>/^(will|should|is|are|can|do|does)\b/i.test(q);
-const lessonOf=q=>(window.LESSONS||[]).find(l=>l.q===q);
-const lab=(t,bull)=>lessonOf(t.question)?(bull?"Sign it":"Reject it"):isYN(t.question)?(bull?"Yes":"No"):(bull?"Bullish":"Bearish");
-const enc=s=>{const b=new TextEncoder().encode(s);let h="";b.forEach(x=>h+=x.toString(16).padStart(2,"0"));return pad(32)+pad(b.length)+h.padEnd(Math.ceil(h.length/64)*64,"0")};
 
-let me=null,holder=false,owner=false,voted={},topics=[],found=null;
+let me=null,holder=false,players=[],tally=[0,0],dayNow=Math.floor(Date.now()/864e5),found=null,revealed=false;
 addEventListener("eip6963:announceProvider",e=>{found=(e.detail&&e.detail.provider)||found});
 dispatchEvent(new Event("eip6963:requestProvider"));
 const prov=()=>window.ethereum||(window.binancew3w&&window.binancew3w.ethereum)||found;
-
 function toast(m){const t=$("#toast");t.textContent=m;t.style.display="block";clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display="none",4500)}
 function copy(txt){
-  const ok=()=>toast("Copied. Paste it into your Agentic Wallet chat and check the details.");
+  const ok=()=>toast("Copied. Paste it into your agent and check the details.");
   if(navigator.clipboard)navigator.clipboard.writeText(txt).then(ok).catch(()=>fb());else fb();
   function fb(){const e=document.createElement("textarea");e.value=txt;document.body.appendChild(e);e.select();document.execCommand("copy");e.remove();ok()}
 }
-
-/* Reads always use public BNB Smart Chain nodes, never the wallet's current chain. */
+/* Reads always use public BNB Smart Chain nodes. */
 function rpc(method,params){
   return Promise.any(RPCS.map(async u=>{
     const c=new AbortController(),t=setTimeout(()=>c.abort(),10000);
@@ -188,144 +167,79 @@ function rpc(method,params){
     }finally{clearTimeout(t)}
   }));
 }
-const call=d=>rpc("eth_call",[{to:C,data:"0x"+d},"latest"]);
-
-function decodeTopic(hex){
-  const c=hex.replace(/^0x/,""),w=i=>BigInt("0x"+c.slice(i*64,i*64+64));
-  const off=Number(w(0))*2,len=Number(BigInt("0x"+c.slice(off,off+64)));
-  const hx=c.slice(off+64,off+64+len*2),b=new Uint8Array(len);
-  for(let i=0;i<len;i++)b[i]=parseInt(hx.slice(i*2,i*2+2),16);
-  return{question:new TextDecoder().decode(b),bull:Number(w(1)),bear:Number(w(2)),active:w(4)>0n};
-}
+const ethCall=(to,d)=>rpc("eth_call",[{to,data:"0x"+d},"latest"]);
 
 async function loadChain(){
+  if(!LIVE){render();return}
   try{
-    const n=Number(BigInt(await call(S.count)));
-    $("#nQ").textContent=n;
-    $("#nV").textContent=Number(BigInt(await call(S.uniq)));
-    const all=await Promise.all(Array.from({length:n},(_,k)=>{const id=n-k;return call(S.topic+pad(id)).then(h=>({id,...decodeTopic(h)}))}));
-    const seen=new Set();
-    topics=all.slice().sort((a,b)=>a.id-b.id).filter(t=>{const dup=seen.has(t.question);seen.add(t.question);return !(dup&&t.bull+t.bear===0)}).sort((a,b)=>b.id-a.id);
-    $("#nQ").textContent=topics.length;
-    $("#nS").textContent=topics.reduce((a,t)=>a+t.bull+t.bear,0);
-    if(me)await loadUser();
+    dayNow=Number(BigInt(await ethCall(C,S.today)));
+    tally=[Number(BigInt(await ethCall(C,S.sign+pad(dayNow)))),Number(BigInt(await ethCall(C,S.rej+pad(dayNow))))];
+    const len=Number(BigInt(await ethCall(C,S.len)));
+    players=[];
+    for(let f=0;f<Math.min(len,500);f+=100){
+      const h=(await ethCall(C,S.page+pad(f)+pad(100))).slice(2),n=Number(BigInt("0x"+h.slice(64,128)));
+      for(let k=0;k<n/5;k++){
+        const w=j=>BigInt("0x"+h.slice(128+(k*5+j)*64,128+(k*5+j+1)*64));
+        players.push({a:"0x"+w(0).toString(16).padStart(40,"0"),total:Number(w(1)),streak:Number(w(2)),best:Number(w(3)),last:Number(w(4))});
+      }
+    }
+    $("#nP").textContent=len;
+    $("#nT").textContent=players.filter(p=>p.last===dayNow).length;
+    $("#nA").textContent=players.reduce((a,p)=>a+p.total,0);
+    if(me)holder=BigInt(await ethCall(AID,"70a08231"+padA(me)))>0n;
   }catch(e){toast("Could not read BNB Smart Chain. Check your connection and tap Refresh.")}
   render();
 }
-
-async function loadUser(){
-  holder=BigInt(await call(S.agent+padA(me)))>0n;
-  owner=("0x"+(await call(S.owner)).slice(-40)).toLowerCase()===me.toLowerCase();
-  $("#studio").hidden=!owner;
-  const v=await Promise.all(topics.map(t=>call(S.voted+pad(t.id)+padA(me))));
-  voted={};topics.forEach((t,i)=>voted[t.id]=BigInt(v[i])>0n);
-  $("#status").textContent=holder
-    ?"Agent ID found on "+short(me)+". You can vote on any open question below."
-    :short(me)+" has no Agent ID. If your Agent ID is in your Agentic Wallet, use “Vote with your Agentic Wallet” on a question.";
-}
+const liveStreak=p=>p.last>=dayNow-1?p.streak:0;
+const mineP=()=>me&&players.find(p=>p.a.toLowerCase()===me.toLowerCase());
 
 function render(){
-  renderToday();
-  renderCal();
-  $("#qs").innerHTML=topics.map(t=>{
-    const[a,b]=[lab(t,1),lab(t,0)],tot=t.bull+t.bear,pa=tot?Math.round(t.bull/tot*100):0,pb=tot?100-pa:0;
-    const can=me&&holder&&t.active&&!voted[t.id];
-    const cmd=bull=>`Send a contract call on BNB Smart Chain (chainId 56) to ${C} with value 0 BNB and hex data 0x${S.cast}${pad(t.id)}${pad(bull?1:0)}`;
-    const tw=encodeURIComponent(`I voted on "${t.question}" as a verified Agent ID holder.\n\nSee what Agent ID holders think: ${SITE}\n\n#BinanceWalletHackathon #AgenticWallet`);
-    return `<article class="q"><div class="meta">Question ${t.id} · ${tot} vote${tot===1?"":"s"}</div>
-<h3>${esc(t.question)}</h3>
-<div class="band" role="img" aria-label="${a} ${pa} percent, ${b} ${pb} percent">${tot
- ?`${t.bull?`<i class="a" style="flex-grow:${t.bull}">${a} ${pa}%</i>`:""}${t.bear?`<i class="b" style="flex-grow:${t.bear}">${b} ${pb}%</i>`:""}`
- :`<i class="n">No votes yet. Be the first.</i>`}</div>
-${can?`<div class="row"><button class="btn a" data-vote="${t.id}:1">Vote ${a}</button><button class="btn b" data-vote="${t.id}:0">Vote ${b}</button></div>`:""}
-${voted[t.id]?`<p class="done">Your vote is recorded. <a target="_blank" rel="noopener" href="https://x.com/intent/tweet?text=${tw}">Share on X</a></p>`:""}
-<details><summary>Vote with your Agentic Wallet</summary>
-<p class="note">Copy a command and paste it into your Agentic Wallet chat. Check the address and data before you confirm. It only records a vote: 0 BNB sent, no token approval. Keep a little BNB for gas.</p>
-<div class="row"><button class="btn a ghost" data-copy="${cmd(1)}">Copy “${a}” command</button><button class="btn b ghost" data-copy="${cmd(0)}">Copy “${b}” command</button></div></details></article>`;
-  }).join("")||`<p class="note">Loading questions from BNB Smart Chain…</p>`;
-}
+  const st=$("#status");
+  st.textContent=!LIVE?"Preview mode: the check-in contract is not connected yet."
+    :!me?"Connect a wallet to check in. If your Agent ID is in your Agentic Wallet, copy the agent prompt below."
+    :holder?"Agent ID found on "+short(me)+". Ready to check in."
+    :short(me)+" has no Agent ID. If your Agent ID is in your Agentic Wallet, use the agent prompt below.";
 
-function renderCal(){
-  const el=$("#cal");
-  if(!window.LESSONS||!topics.length){el.innerHTML="";return}
-  const day=Math.floor((Date.now()-Date.parse(START+"T00:00:00Z"))/864e5);
-  el.innerHTML=`<div class="meta">30-day drill calendar${me&&holder?"":" · connect a wallet with an Agent ID to track yours"}</div><div class="cal">`+LESSONS.map((l,i)=>{
-    const t=topics.find(x=>x.question===l.q),d=t&&voted[t.id],c=d?"done":i===day?"now":i>day?"lock":"";
-    return `<span class="tile ${c}" title="Drill ${i+1}">${d?"✓":i+1}</span>`}).join("")+`</div>`;
-}
-function tick(){
-  const n=new Date(),m=Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate()+1),s=Math.max(0,Math.floor((m-n)/1000)),f=x=>String(x).padStart(2,"0");
-  $("#cd").textContent=f(Math.floor(s/3600))+":"+f(Math.floor(s%3600/60))+":"+f(s%60);
-}
-setInterval(tick,1000);tick();
-const revealed={};
-function renderToday(){
-  const el=$("#today");
-  if(!window.LESSONS){el.innerHTML="";return}
-  const n=LESSONS.length,day=Math.floor((Date.now()-Date.parse(START+"T00:00:00Z"))/864e5);
-  const box=h=>{el.innerHTML=`<article class="q"><div class="meta">Daily Safety Drill</div>${h}</article>`};
-  if(day<0)return box(`<h3>The first drill opens on ${START} (UTC). Come back then.</h3>`);
-  if(!topics.length)return box(`<h3>Loading today's drill from BNB Smart Chain…</h3>`);
-  const L=LESSONS[Math.min(day,n-1)],t=topics.find(x=>x.question===L.q);
-  if(!t)return box(`<h3>Today's drill is not on-chain yet. Check back soon.</h3>`);
-  const done=LESSONS.filter(l=>{const x=topics.find(y=>y.question===l.q);return x&&voted[x.id]}).length;
-  const tot=t.bull+t.bear,pa=tot?Math.round(t.bull/tot*100):0,pb=tot?100-pa:0;
-  const can=me&&holder&&t.active&&!voted[t.id],show=voted[t.id]||revealed[t.id];
-  const hx=b=>`0x${S.cast}${pad(t.id)}${pad(b?1:0)}`;
-  const agentPrompt=`Help me practise AI-agent wallet safety. Take today's AgentPulse Safety Drill #${Math.min(day,n-1)+1}.
+  const n=LESSONS.length,sd=Math.floor(Date.parse(START+"T00:00:00Z")/864e5),L=LESSONS[Math.max(0,dayNow-sd)%n];
+  const m=mineP(),done=m&&m.last===dayNow,tot=tally[0]+tally[1],pa=tot?Math.round(tally[0]/tot*100):0,pb=tot?100-pa:0;
+  const can=LIVE&&me&&holder&&!done,show=done||revealed;
+  const hx=b=>`0x${S.check}${pad(b?1:0)}`;
+  const agentPrompt=`Help me practise AI-agent wallet safety. Take today's AgentPulse check-in.
 
 SCENARIO: "${L.q}"
 
 STEP 1. Decide on your own: is signing this SAFE (SIGN) or UNSAFE (REJECT)? Do not look anything up first.
 STEP 2. Tell me your answer and give two short reasons in plain language.
-STEP 3. Prepare the vote for your answer. It is one call on BNB Smart Chain (chainId 56):
+STEP 3. Prepare the check-in for your answer. It is one call on BNB Smart Chain (chainId 56):
 - Contract: ${C}
-- Function: castSignal(uint256 topicId, bool isBullish), topicId ${t.id}
+- Function: checkIn(bool sign)
 - If SIGN, hex data: ${hx(1)}
 - If REJECT, hex data: ${hx(0)}
 - Value: 0 BNB. No token approval.
 STEP 4. Show me the contract address, the hex data and your chosen answer. Wait for my clear confirmation before you send anything. If I say no, do nothing.
 
-RULES: Only call the contract above. Never skip my confirmation. Never request an approval. Never send BNB or tokens. Never ask for my seed phrase, private key or pairing code. If the wallet has no Agent ID the call will fail: tell me and stop, do not retry.`;
-  const tw=encodeURIComponent(`I'm doing the Agent Safety Drill (${done}/${n} done). Would you sign this?\n\n"${L.q}"\n\n${SITE}\n\n#BinanceWalletHackathon #AgenticWallet`);
-  el.innerHTML=`<article class="q"><div class="meta">Daily Safety Drill · Day ${Math.min(day,n-1)+1} of ${n} · ${tot} vote${tot===1?"":"s"}</div>
+RULES: Only call the contract above. Never skip my confirmation. Never schedule or repeat calls on your own. Never request an approval. Never send BNB or tokens. Never ask for my seed phrase, private key or pairing code. If the wallet has no Agent ID the call will fail: tell me and stop, do not retry.`;
+  const tw=encodeURIComponent(`I checked in on today's Agent Safety drill${m?" (streak "+liveStreak(m)+", "+m.total+" days)":""}. Would you sign this?\n\n"${L.q}"\n\n${SITE}\n\n#BinanceWalletHackathon #AgenticWallet`);
+  $("#today").innerHTML=`<article class="q"><div class="meta">Day ${Math.max(0,dayNow-sd)%n+1} of ${n} · ${tot} check-in${tot===1?"":"s"} today</div>
 <h3>${esc(L.q)}</h3>
-${can?`<div class="row"><button class="btn a" data-vote="${t.id}:1">Sign it</button><button class="btn b" data-vote="${t.id}:0">Reject it</button></div>`:""}
-${show?`<div class="band" style="margin-top:12px">${tot?`${t.bull?`<i class="a" style="flex-grow:${t.bull}">Sign ${pa}%</i>`:""}${t.bear?`<i class="b" style="flex-grow:${t.bear}">Reject ${pb}%</i>`:""}`:`<i class="n">No votes yet</i>`}</div>
-<div style="background:var(--paper);border-radius:8px;padding:10px 12px;font-size:14px"><span class="stamp ${L.ok?"ok":"no"}">${L.ok?"Safe to sign":"Reject"}</span> ${esc(L.why)}</div>`
-:`<button class="btn ghost" style="color:var(--accent);margin-top:12px" data-act="reveal" data-id="${t.id}">${can?"Skip voting and show the answer":"Show the answer"}</button>`}
+${can?`<div class="row"><button class="btn a" data-vote="1">Sign it</button><button class="btn b" data-vote="0">Reject it</button></div>`:""}
+${done?`<p class="done">Checked in today. Streak ${liveStreak(m)} · ${m.total} day${m.total===1?"":"s"} · best ${m.best}. <a target="_blank" rel="noopener" href="https://x.com/intent/tweet?text=${tw}">Share on X</a></p>`:""}
+${show?`<div class="band" style="margin-top:12px">${tot?`${tally[0]?`<i class="a" style="flex-grow:${tally[0]}">Sign ${pa}%</i>`:""}${tally[1]?`<i class="b" style="flex-grow:${tally[1]}">Reject ${pb}%</i>`:""}`:`<i class="n">No check-ins yet</i>`}</div>
+<div style="background:var(--paper);border-radius:12px;padding:10px 12px;font-size:14px"><span class="stamp ${L.ok?"ok":"no"}">${L.ok?"Safe to sign":"Reject"}</span> ${esc(L.why)}</div>`
+:`<button class="btn ghost" style="margin-top:12px" data-act="reveal">${can?"Skip and show the answer":"Show the answer"}</button>`}
 <details><summary>Let your AI agent take this drill</summary>
-<p class="note">Copy this prompt into your AI agent that uses your Agentic Wallet. It decides first, explains its reasons, then asks you to confirm. Compare its answer with the verdict here.</p>
-<textarea readonly rows="9" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font:12px/1.45 monospace;margin-top:8px">${esc(agentPrompt)}</textarea>
-<button class="btn ghost" style="color:var(--accent);margin-top:8px" data-copy="${esc(agentPrompt)}">Copy the prompt</button></details>
-<p class="note" style="margin-top:12px">${me&&holder?"Your progress: "+done+" of "+n+" drills.":"Hold an Agent ID to vote and track progress."} <a target="_blank" rel="noopener" href="https://x.com/intent/tweet?text=${tw}">Share on X</a></p></article>`;
-}
-async function publishDrills(){
-  const todo=LESSONS.filter(l=>!topics.some(t=>t.question===l.q)).slice(0,10);
-  if(!todo.length)return toast("All drills are already published.");
-  for(let k=0;k<todo.length;k++){
-    toast("Publishing drill "+(k+1)+" of "+todo.length+"…");
-    if(!await send(S.create+enc(todo[k].q)))return;
-  }
-  toast("Done. Run it again for the next batch.");
-}
-async function loadFeed(){
-  const box=$("#feed");box.innerHTML=`<p class="note">Scanning recent blocks…</p>`;
-  try{
-    const head=Number(BigInt(await rpc("eth_blockNumber",[])));let logs=[];
-    for(let i=0;i<12&&logs.length<15;i++){
-      const to=head-i*5000,from=to-4999;
-      const r=await rpc("eth_getLogs",[{address:C,fromBlock:"0x"+from.toString(16),toBlock:"0x"+to.toString(16),topics:[S.evt]}]);
-      logs=logs.concat(r.reverse());
-    }
-    if(!logs.length){box.innerHTML=`<p class="note">No votes in the last 60,000 blocks. Full history is on <a target="_blank" rel="noopener" href="https://bscscan.com/address/${C}#events">BscScan</a>.</p>`;return}
-    box.innerHTML=logs.slice(0,15).map(l=>{
-      const id=Number(BigInt(l.topics[1])),t=topics.find(x=>x.id===id)||{question:""},bull=BigInt(l.data)>0n;
-      return `<div class="feed"><span>${short("0x"+l.topics[2].slice(-40))} · Question ${id}</span><span><b>${lab(t,bull)}</b> · <a target="_blank" rel="noopener" href="https://bscscan.com/tx/${l.transactionHash}">tx</a></span></div>`;
-    }).join("");
-  }catch(e){box.innerHTML=`<p class="note">Could not load votes. See <a target="_blank" rel="noopener" href="https://bscscan.com/address/${C}#events">BscScan events</a>.</p>`}
-}
+<p class="note">Paste this prompt into your AI agent that uses your Agentic Wallet. It decides first, explains, then asks you to confirm.</p>
+<textarea readonly rows="9" style="width:100%;padding:10px;border:2px solid var(--ink);border-radius:12px;font:12px/1.45 monospace;margin-top:8px">${esc(agentPrompt)}</textarea>
+<button class="btn ghost" style="margin-top:8px" data-copy="${esc(agentPrompt)}">Copy the prompt</button></details></article>`;
 
+  const rows=players.slice().sort((x,y)=>y.total-x.total||y.best-x.best||liveStreak(y)-liveStreak(x)).slice(0,20);
+  $("#lb").innerHTML=rows.length?rows.map((p,i)=>`<div class="feed"><span><b>#${i+1}</b> ${short(p.a)}${me&&p.a.toLowerCase()===me.toLowerCase()?" (you)":""}</span><span>${p.total} days · streak ${liveStreak(p)} · best ${p.best}</span></div>`).join("")
+    :`<p class="note">No check-ins yet. Be the first on the board.</p>`;
+}
+function tick(){
+  const n=new Date(),m=Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate()+1),s=Math.max(0,Math.floor((m-n)/1000)),f=x=>String(x).padStart(2,"0");
+  $("#cd").textContent=f(Math.floor(s/3600))+":"+f(Math.floor(s%3600/60))+":"+f(s%60);
+}
 async function ensureBsc(e){
   let id=await e.request({method:"eth_chainId"});
   if(parseInt(id,16)!==56){
@@ -334,71 +248,7 @@ async function ensureBsc(e){
   }
   return parseInt(id,16)===56;
 }
-
 async function connect(silent){
   const e=prov();
   if(!e){
-    if(!silent){
-      $("#status").textContent="No wallet found in this browser. On a phone, open this page inside the wallet app's built-in dApp browser (for example Binance Wallet). On a computer, install a wallet extension (such as Binance Wallet or MetaMask) and reload. You can read every question and result without a wallet, and you can vote from an Agentic Wallet with the copied command.";
-      toast("No wallet found in this browser. See the note at the top.");
-    }
-    return;
-  }
-  try{
-    const acc=await e.request({method:silent?"eth_accounts":"eth_requestAccounts"});
-    if(!acc||!acc.length)return;
-    me=acc[0];const b=$("#conn");b.textContent=short(me);b.classList.add("on");
-    await loadChain();
-  }catch(_){if(!silent)toast("Connection cancelled.")}
-}
-
-async function send(data){
-  if(send.busy)return toast("Please wait for the current transaction to finish.");
-  send.busy=true;
-  try{return await sendTx(data)}finally{send.busy=false}
-}
-async function sendTx(data){
-  const e=prov();
-  if(!e||!me)return toast("Connect your wallet first.");
-  if(!await ensureBsc(e))return toast("Switch your wallet to BNB Smart Chain, then try again.");
-  try{
-    toast("Confirm the transaction in your wallet.");
-    const h=await e.request({method:"eth_sendTransaction",params:[{from:me,to:C,data:"0x"+data}]});
-    toast("Sent. Waiting for confirmation…");
-    for(let i=0;i<30;i++){
-      await new Promise(r=>setTimeout(r,2000));
-      const rc=await rpc("eth_getTransactionReceipt",[h]);
-      if(rc&&rc.blockNumber){toast(rc.status==="0x1"?"Recorded on-chain.":"The transaction failed on-chain.");break}
-    }
-    await loadChain();
-    return true;
-  }catch(err){toast("Not sent: "+(err.message||"rejected"));return false}
-}
-
-document.addEventListener("click",e=>{
-  const t=e.target.closest("[data-act],[data-vote],[data-copy],[data-tab],.chip");if(!t)return;
-  if(t.dataset.copy)return copy(t.dataset.copy);
-  if(t.dataset.vote){const[id,v]=t.dataset.vote.split(":");return send(S.cast+pad(id)+pad(v))}
-  if(t.dataset.tab){
-    ["qs","fd","ab"].forEach(k=>{$("#p-"+k).hidden=k!==t.dataset.tab});
-    document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===t));
-    if(t.dataset.tab==="fd")loadFeed();return;
-  }
-  if(t.classList.contains("chip")){$("#newQ").value=t.textContent;return}
-  if(t.dataset.act==="connect")return connect(false);
-  if(t.dataset.act==="refresh")return loadChain();
-  if(t.dataset.act==="reveal"){revealed[t.dataset.id]=true;return renderToday()}
-  if(t.dataset.act==="drills")return publishDrills();
-  if(t.dataset.act==="publish"){
-    const q=$("#newQ").value.trim();if(!q)return toast("Write or pick a question first.");
-    if(topics.some(x=>x.question===q))return toast("This question is already published.");
-    send(S.create+enc(q)).then(()=>{$("#newQ").value=""});
-  }
-});
-
-$("#presets").innerHTML=PRESETS.map(p=>`<button class="chip">${esc(p)}</button>`).join("");
-$("#lnkC").href="https://bscscan.com/address/"+C+"#code";
-render();loadChain();setTimeout(()=>connect(true),400);
-</script>
-</body>
-</html>
+    if(!silent){$("#status").textContent="No wallet found in this browser. On a phone, open this page inside the wallet a
